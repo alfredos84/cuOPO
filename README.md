@@ -10,6 +10,9 @@ To run simulations using the package clone this project typing in a terminal
 ```
 git clone https://github.com/alfredos84/cuOPO.git
 ```
+Once the project was cloned, the user will find a parent folder `cuOPO` containing two other
+- `src`: contains the main file `cuOPO.cu`, the header files `<header>.h`, and the bash file `cuOPO.sh` used to compile and execute the package by passing several simulations parameters.
+- `cw_3eqs_PPLN_delta_0_POWER_3.5`: this folder contains the output files for a given set of parameters and should be taken as an example. After cloning the project, this folder should be renamed before running the first test simulation.
 
 ```
 chmod 777 cuOPO.sh # enable permissions for execution

@@ -5,7 +5,11 @@ cuOPO is a C/CUDA toolkit for simulating optical parametric oscillators using th
 The provided software implements a solver for the CWEs including dispersion terms, linear absorption and intracavity element if they are required. It also includes flags to solve nanosecond or continuous wave time regimes.
 
 ## Setup and execution
-To run this project, download the folder `/src` containing the files and open a terminal. Then execute the following command lines:
+
+To run simulations using the package clone this project typing in a terminal
+```
+git clone https://github.com/alfredos84/cuOPO.git
+```
 
 ```
 chmod 777 cuOPO.sh # enable permissions for execution

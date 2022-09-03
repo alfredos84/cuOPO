@@ -22,6 +22,7 @@ chmod 777 cuOPO.sh # enable permissions for execution
 ```
 
 Finally, to execute the file execute the following command line
+```
 ./cuOPO.sh         # execute the files
 ```
 

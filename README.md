@@ -12,7 +12,7 @@ git clone https://github.com/alfredos84/cuOPO.git
 ```
 Once the project was cloned, the user will find a parent folder `cuOPO` containing two other
 - `src`: contains the main file `cuOPO.cu`, the header files `<header>.h`, and the bash file `cuOPO.sh` used to compile and execute the package by passing several simulations parameters.
-  - `cw_3eqs_PPLN_delta_0_POWER_3.5`: this folder contains the output files for a given set of parameters and should be taken as an example. After cloning the project, this folder should be **renamed** before running the first test simulation. If not, the new files will replace the older ones.
+- `cw_3eqs_PPLN_delta_0_POWER_3.5`: this folder contains the output files for a given set of parameters and should be taken as an example. After cloning the project, this folder should be **renamed** before running the first test simulation. If not, the new files will replace the older ones.
 
 ### Bash file `src/cuOPO.sh`
 

@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
 	real_t ki        = 2*PI*deff/(ni*li);        // kappa idler [1/V]
 	real_t alphai    = 0.002e-4;                 // signal linear absorption [1/μm]
 	
-	real_t dk        = 0.*2*PI*( np/lp-ns/ls-ni/li-1/Lambda ); // mismatch factor
+	real_t dk        = 2*PI*( np/lp-ns/ls-ni/li-1/Lambda ); // mismatch factor
 	real_t dkp       = 1/vp-1/vs;                           // group velocity mismatch	
 	real_t Lcav      = atoi(argv[4]) * Lcr;                 // cavity length [um]
 	real_t Rs        = atof(argv[5])*0.01;                  // Reflectivity at signal wavelength 

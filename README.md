@@ -2,7 +2,7 @@
 
 cuOPO is a C/CUDA toolkit for simulating optical parametric oscillators using the coupled-wave equations (CWEs) that well-describe the three wave mixing (TWM) processes in a second-order nonlinear media.
 
-The provided software implements a solver for the CWEs including dispersion terms, linear absorption and intracavity element if they are required. It also includes flags to solve nanosecond or continuous wave time regimes.
+The provided software implements a solver for the CWEs including dispersion terms, linear absorption and intracavity element if they are required. Two regimes are availables: nanosecond and contiuous wave. The user is free to incorporate picosecond or femtosecond regimes making the proper corrections.
 
 ## Setup and execution
 

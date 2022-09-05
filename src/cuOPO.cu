@@ -478,14 +478,14 @@ int main(int argc, char *argv[]){
 		}
 		#endif
 		#ifdef NS_OPO		
-			SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, nn, extra_win, N_rt, SIZE ); // saves signal
-			CHECK(cudaDeviceSynchronize());
-			SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, nn, extra_win, N_rt, SIZE ); // saves pump
-			CHECK(cudaDeviceSynchronize());
-			#ifdef THREE_EQS
-			SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, nn, extra_win, N_rt, SIZE ); // saves idler
-			CHECK(cudaDeviceSynchronize());
-			#endif
+		SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, nn, extra_win, N_rt, SIZE ); // saves signal
+		CHECK(cudaDeviceSynchronize());
+		SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, nn, extra_win, N_rt, SIZE ); // saves pump
+		CHECK(cudaDeviceSynchronize());
+		#ifdef THREE_EQS
+		SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, nn, extra_win, N_rt, SIZE ); // saves idler
+		CHECK(cudaDeviceSynchronize());
+		#endif
 		#endif
 	}
 	
@@ -502,7 +502,7 @@ int main(int argc, char *argv[]){
 	if (save_vectors == 1){
 		std::cout << "\nSaving time and frequency vectors...\n" << std::endl;
 		Filename = "Tp"; SaveFileVectorReal (Tp, SIZEL, Filename+Extension);
- 		Filename = "freq"; SaveFileVectorReal (Fp, SIZEL, Filename+Extension);
+		Filename = "freq"; SaveFileVectorReal (Fp, SIZEL, Filename+Extension);
 		Filename = "T"; SaveFileVectorReal (T, SIZE, Filename+Extension);
 	}
 	else{ std::cout << "\nTime and frequency were previuosly save...\n" << std::endl;
@@ -549,12 +549,12 @@ int main(int argc, char *argv[]){
 
 	
 	#ifdef THREE_EQS
-		free(Ai); free(Ai_total);
-		
-		CHECK(cudaFree(Ai_gpu));	CHECK(cudaFree(Ai_total_gpu));
-		CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
-		CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
-		CHECK(cudaFree(auxi_gpu));
+	free(Ai); free(Ai_total);
+
+	CHECK(cudaFree(Ai_gpu));	CHECK(cudaFree(Ai_total_gpu));
+	CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
+	CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
+	CHECK(cudaFree(auxi_gpu));
 	#endif
 
 	// Destroy CUFFT context and reset the GPU

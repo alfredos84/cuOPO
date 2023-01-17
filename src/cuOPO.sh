@@ -105,7 +105,7 @@ do
 								FILE="${REG}_${EQS}eqs_PPLN_beta_${MODDEP}_N_${N}_GDD_${GDD}.txt"
 								
 								printf "Bash execution and writing output file...\n\n"
-								./$EXEC_FILE $ARG1 $ARG2 $ARG3 $ARG4 $R $DELTAS $GDD $ARG8 $N $U $MODDEP $FREQMOD $TOD $SPM | tee -a $FILE
+								./cuOPO $ARG1 $ARG2 $ARG3 $ARG4 $R $DELTAS $GDD $ARG8 $N $U $MODDEP $FREQMOD $TOD $SPM | tee -a $FILE
 						# 			
 								printf "Bash finished!!\n\n" 
 								mkdir $FOLDER

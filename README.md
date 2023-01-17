@@ -56,7 +56,7 @@ Make sure you know your GPU architecture before compiling and running simulation
 1. Nvidia Geforce MX250: architecture -> Pascal -> flag: sm_60
 2. Nvidia Geforce GTX1650: architecture -> Turing -> flag: sm_75
 
-Please check the NVIDIA documentation in https://docs.nvidia.com/cuda/pascal-compatibility-guide/index.html
+Please check the NVIDIA documentation in https://docs.nvidia.com/cuda/
 
 
 ### Contact me

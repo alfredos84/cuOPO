@@ -5,7 +5,7 @@ is a CUDA-based toolkit for simulating optical parametric oscillators using the 
 The provided software implements a solver for the CWEs including dispersion terms, linear absorption and intracavity element if they are required. It also includes flags to solve nanosecond or continuous wave time regimes. However, the user is free to incorporate picosecond or femtosecond regimes by making the proper corrections.
 
 This code is useful for simulations based on three-wave mixing proccesses such as optical parametric oscillators (OPOs).
-It solves the coupled-wave equations (CWEs) for signal, idler and pump using a parallel computing scheme based on CUDA programming.
+It solves the coupled-wave equations (CWEs) for signal, idler and pump using a parallel computing scheme based on Split-Step Fourier Method (SSFM).
 
 For running this code is necessary to have a GPU in your computer and installed the CUDA drivers and the CUDA-TOOLKIT as well. 
 To install the CUDA driver on a Linux system please visit: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html

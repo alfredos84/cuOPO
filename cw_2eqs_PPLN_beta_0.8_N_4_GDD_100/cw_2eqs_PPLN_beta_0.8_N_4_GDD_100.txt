@@ -1,0 +1,131 @@
+
+
+
+#######---Welcome to OPO calculator---#######
+
+
+
+Date: Tue Jan 17 12:39:43 2023
+
+Regime: continuous wave
+Two equations
+
+
+Using Device 0: GPU NVIDIA GeForce GTX 1650
+Wave:                   Continuous Wave
+
+Not using third-order material.
+
+
+Simulation parameters:
+
+ 
+Number of round trips   = 10000
+Pump wavelength         = 1550 nm
+Signal wavelength       = 3100 nm
+Temp                    = 32.88 ºC
+np                      = 2.13282
+ns                      = 2.08855
+ni                      = 2.08855
+ν⁻¹ pump                = 0.0072603 ps/μm
+ν⁻¹ signal              = 0.00732052 ps/μm
+Δk                      = -4.68134e-08 μm⁻¹
+Δk'                     = -6.02235e-05 ps/μm⁻¹
+GVD pump                = 9.819e-08 ps²/μm
+GVD signal              = -5.60701e-07 ps²/μm
+TOD pump                = 0 ps³/μm
+TOD signal              = 0 ps³/μm
+Net GVD                 = -0 ps²/μm
+GVD compensation        = 100 %
+Net TOD                 = 0 fs³
+TOD compensation        = 0 %
+deff                    = 14.77 pm/V
+Λ                       = 35.01 μm
+αcp                     = 2e-07 μm⁻¹
+αcs                     = 2e-07 μm⁻¹
+αs                      = 0.0105
+Crystal length          = 5 mm
+Cavity  length          = 25 mm
+Δz                      = 33.3333 μm
+Reflectivity (signal)   = 98 %
+Cavity Finesse          = 314.16
+Cavity lw (FWHM)        = 31.3463 MHz
+Round-trip time         = 101.546081542969 ps
+FSR                     = 9.84774623066187 GHz
+Cavity detuning (δ)     = 0π
+Using N                 = 2^14 = 16384 points
+dT                      = 0.00619788095355034 ps
+SIZEL                   = 262144
+dFp                     = 0.000615484139416367 THz
+Max frequency           = 80.6721267700195 THz
+Ap0                     = 0.293018490076065 V/um
+waist                   = 55 μm
+spot                    = 9503.318359375 μm²
+Power threshold         = 0.577430188655853 W
+Power                   = 2.30972075462341 W
+Times above the thres.  = 4
+Using a phase modulator:
+Mod. depth (β)          = 0.8π rad = 2.51327419281006 rad
+Freq. detuning (δf)     = 45.3655957244337 MHz
+Mod. frequency(fm)      = 9.80238057672977 GHz
+
+
+Point in the space of parameters:
+
+(N,β,δf,ε) = ( 4, 0.8, 45.37, 1 )
+
+
+Setting constants and vectors in device...
+Starting main loop on CPU & GPU...
+
+#round trip: 0
+#round trip: 250
+#round trip: 500
+#round trip: 750
+#round trip: 1000
+#round trip: 1250
+#round trip: 1500
+#round trip: 1750
+#round trip: 2000
+#round trip: 2250
+#round trip: 2500
+#round trip: 2750
+#round trip: 3000
+#round trip: 3250
+#round trip: 3500
+#round trip: 3750
+#round trip: 4000
+#round trip: 4250
+#round trip: 4500
+#round trip: 4750
+#round trip: 5000
+#round trip: 5250
+#round trip: 5500
+#round trip: 5750
+#round trip: 6000
+#round trip: 6250
+#round trip: 6500
+#round trip: 6750
+#round trip: 7000
+#round trip: 7250
+#round trip: 7500
+#round trip: 7750
+#round trip: 8000
+#round trip: 8250
+#round trip: 8500
+#round trip: 8750
+#round trip: 9000
+#round trip: 9250
+#round trip: 9500
+#round trip: 9750
+#round trip: 9999
+
+Saving time and frequency vectors...
+
+
+
+...time elapsed 10.01 min
+
+ 
+Tue Jan 17 12:49:44 2023
+

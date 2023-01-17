@@ -33,7 +33,7 @@ Finally, to execute the file execute the following command line
 ./cuOPO.sh         # execute the files
 ```
 
-When finished a new folder named `cw_3eqs_PPLN_delta_0_POWER_3.5` will have been created containing the output files.
+When finished a new folder named `cw_2eqs_PPLN_beta_0.8_N_4_GDD_100` will have been created containing the output files.
 
 In the `cuOPO.sh` file you will find the command line for the compilation:
 ```

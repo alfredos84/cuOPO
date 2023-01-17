@@ -39,7 +39,7 @@ In the `cuOPO.sh` file you will find the command line for the compilation:
 ```
 nvcc cuOPO.cu -D<REGIME> --gpu-architecture=sm_75 -lcufftw -lcufft -o cuOPO
 ```
-where the preprocessor variable `<REGIME>` could be either `CW_OPO` or `NS_OPO`. This compiles the package using two coupled-wave equations. If the user wants to use three coupled-wave equations, add the additional preprocessor variable `-DTHREE_EQS` in the compilation line. The flag `--gpu-architecture=sm_75` is related to the GPU architecture, and the user should check the proper number (instead of 75). The flags `-lcufftw` and `-lcufft` tell the compiler to use the `CUFFT library` that performs the Fourier transform on GPU .
+where the preprocessor variable `<REGIME>` could be either `CW_OPO` or `NS_OPO`. This compiles the package using two coupled-wave equations. If the user wants to use three coupled-wave equations, add the additional preprocessor variable `-DTHREE_EQS` in the compilation line. The flag `--gpu-architecture=sm_75` is related to the GPU architecture (see below more information about this point). The flags `-lcufftw` and `-lcufft` tell the compiler to use the `CUFFT library` that performs the Fourier transform on GPU .
 
 Finally, the execution is done using the command line in the `cuOPO.sh` file is
 ```
@@ -53,7 +53,7 @@ This package returns a set of `.dat` files with the signal, idler and pump elect
 
 ### GPU architecture
 Make sure you know your GPU architecture before compiling and running simulations. For example, pay special attention to the sm_75 flag defined in the provided `cuOPO.sh` file. That flag might not be the same for your GPU since it corresponds to a specific architecture. For instance, I tested this package using two different GPUs:
-1. Nvidia Geforce MX250  : architecture -> Pascal -> flag: sm_60
+1. Nvidia Geforce MX250: architecture -> Pascal -> flag: sm_60
 2. Nvidia Geforce GTX1650: architecture -> Turing -> flag: sm_75
 
 Please check the NVIDIA documentation in https://docs.nvidia.com/cuda/pascal-compatibility-guide/index.html

@@ -136,7 +136,7 @@ __global__ void rk4(complex_t *Ap, complex_t *As,  complex_t *Ai, complex_t *k1p
 //              z: crystal position
 // OUTOPUT
 // save in auxp, auxs the electric fields after appling dispersion
-__global__ void LinearOperator(complex_t *auxp, complex_t *auxs, complex_t *auxi, complex_t *Apw, complex_t* Asw, complex_t* Aiw, real_t *w, real_t lp, real_t ls, real_t li, real_t vp, real_t vs, real_t vi, real_t b2p, real_t b2s, real_t b2i, real_t alphap, real_t alphas, real_t alphai, int SIZE, real_t z)
+__global__ void LinearOperator(complex_t *auxp, complex_t *auxs, complex_t *auxi, complex_t *Apw, complex_t* Asw, complex_t* Aiw, real_t *w, real_t lp, real_t ls, real_t li, real_t vp, real_t vs, real_t vi, real_t b2p, real_t b2s, real_t b2i,  real_t b3p, real_t b3s, real_t b3i, real_t alphap, real_t alphas, real_t alphai, int SIZE, real_t z)
 {
 	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -146,12 +146,12 @@ __global__ void LinearOperator(complex_t *auxp, complex_t *auxs, complex_t *auxi
 	real_t atteni = expf(-0.5*alphai*z);
 	
 	if (idx < SIZE){		
-		auxp[idx].x = Apw[idx].x * cosf(z*(w[idx]*(1/vs-1/vp)+0.5*w[idx]*w[idx]*b2p)) - Apw[idx].y * sinf(z*(w[idx]*(1/vs-1/vp)+0.5*w[idx]*w[idx]*b2p));
-		auxp[idx].y = Apw[idx].y * cosf(z*(w[idx]*(1/vs-1/vp)+0.5*w[idx]*w[idx]*b2p)) + Apw[idx].x * sinf(z*(w[idx]*(1/vs-1/vp)+0.5*w[idx]*w[idx]*b2p));
-		auxs[idx].x = Asw[idx].x * cosf(z*(w[idx]*(1/vs-1/vs)+0.5*w[idx]*w[idx]*b2s)) - Asw[idx].y * sinf(z*(w[idx]*(1/vs-1/vs)+0.5*w[idx]*w[idx]*b2s));
-		auxs[idx].y = Asw[idx].y * cosf(z*(w[idx]*(1/vs-1/vs)+0.5*w[idx]*w[idx]*b2s)) + Asw[idx].x * sinf(z*(w[idx]*(1/vs-1/vs)+0.5*w[idx]*w[idx]*b2s));
-		auxi[idx].x = Aiw[idx].x * cosf(z*(w[idx]*(1/vs-1/vi)+0.5*w[idx]*w[idx]*b2i)) - Aiw[idx].y * sinf(z*(w[idx]*(1/vs-1/vi)+0.5*w[idx]*w[idx]*b2i));
-		auxi[idx].y = Aiw[idx].y * cosf(z*(w[idx]*(1/vs-1/vi)+0.5*w[idx]*w[idx]*b2i)) + Aiw[idx].x * sinf(z*(w[idx]*(1/vs-1/vi)+0.5*w[idx]*w[idx]*b2i));
+		auxp[idx].x = Apw[idx].x * cosf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6)) - Apw[idx].y * sinf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
+		auxp[idx].y = Apw[idx].y * cosf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6)) + Apw[idx].x * sinf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
+		auxs[idx].x = Asw[idx].x * cosf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6)) - Asw[idx].y * sinf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
+		auxs[idx].y = Asw[idx].y * cosf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3i/6)) + Asw[idx].x * sinf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
+		auxi[idx].x = Aiw[idx].x * cosf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6)) - Aiw[idx].y * sinf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6));
+		auxi[idx].y = Aiw[idx].y * cosf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6)) + Aiw[idx].x * sinf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6));
 	}
 	if (idx < SIZE){
 		Apw[idx].x = auxp[idx].x * attenp;
@@ -174,7 +174,7 @@ __global__ void LinearOperator(complex_t *auxp, complex_t *auxs, complex_t *auxi
  * 	3 - Repeat 1 for dz/2. 
  * 	4-  Repeat steps 1-3 until finishing the crystal
  */
-void EvolutionInCrystal( real_t *w_ext_gpu, dim3 grid, dim3 block, complex_t *Ap, complex_t *As, complex_t *Ai, complex_t *Apw_gpu, complex_t *Asw_gpu, complex_t *Aiw_gpu, complex_t *k1p_gpu, complex_t *k1s_gpu, complex_t *k1i_gpu, complex_t *k2p_gpu, complex_t *k2s_gpu, complex_t *k2i_gpu, complex_t *k3p_gpu, complex_t *k3s_gpu, complex_t *k3i_gpu, complex_t *k4p_gpu, complex_t *k4s_gpu, complex_t *k4i_gpu, complex_t *auxp_gpu, complex_t *auxs_gpu, complex_t *auxi_gpu, real_t lp, real_t ls, real_t li, real_t vp, real_t vs, real_t vi, real_t b2p, real_t b2s, real_t b2i, real_t dk, real_t alphap, real_t alphas, real_t alphai, real_t kp, real_t ks, real_t ki, real_t dz, int steps_z, int SIZE )
+void EvolutionInCrystal( real_t *w_ext_gpu, dim3 grid, dim3 block, complex_t *Ap, complex_t *As, complex_t *Ai, complex_t *Apw_gpu, complex_t *Asw_gpu, complex_t *Aiw_gpu, complex_t *k1p_gpu, complex_t *k1s_gpu, complex_t *k1i_gpu, complex_t *k2p_gpu, complex_t *k2s_gpu, complex_t *k2i_gpu, complex_t *k3p_gpu, complex_t *k3s_gpu, complex_t *k3i_gpu, complex_t *k4p_gpu, complex_t *k4s_gpu, complex_t *k4i_gpu, complex_t *auxp_gpu, complex_t *auxs_gpu, complex_t *auxi_gpu, real_t lp, real_t ls, real_t li, real_t vp, real_t vs, real_t vi, real_t b2p, real_t b2s, real_t b2i, real_t b3p, real_t b3s, real_t b3i, real_t dk, real_t alphap, real_t alphas, real_t alphai, real_t kp, real_t ks, real_t ki, real_t dz, int steps_z, int SIZE )
 {
 	
 	// Set plan for cuFFT 1D and 2D//
@@ -219,7 +219,7 @@ void EvolutionInCrystal( real_t *w_ext_gpu, dim3 grid, dim3 block, complex_t *Ap
 		CHECK(cudaDeviceSynchronize());
 		CUFFTscale<<<grid,block>>>(Apw_gpu, SIZE, SIZE);
 		CHECK(cudaDeviceSynchronize());
-		LinearOperator<<<grid,block>>>( auxp_gpu, auxs_gpu, auxi_gpu, Apw_gpu, Asw_gpu, Aiw_gpu, w_ext_gpu, lp, ls, li, vp, vs, vi, b2p, b2s, b2i, alphap, alphas, alphai, SIZE, dz);
+		LinearOperator<<<grid,block>>>( auxp_gpu, auxs_gpu, auxi_gpu, Apw_gpu, Asw_gpu, Aiw_gpu, w_ext_gpu, lp, ls, li, vp, vs, vi, b2p, b2s, b2i, b3p, b3s, b3i, alphap, alphas, alphai, SIZE, dz);
 		CHECK(cudaDeviceSynchronize());
 		cufftExecC2C(plan1D, (complex_t *)Asw_gpu, (complex_t *)As, CUFFT_FORWARD);
 		CHECK(cudaDeviceSynchronize());

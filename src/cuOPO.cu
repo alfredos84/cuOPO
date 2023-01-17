@@ -79,41 +79,46 @@ int main(int argc, char *argv[]){
 	const real_t EPS0 = 8.8541878128E-12*1E12/1E6;       // vacuum pertivity [W.ps/V²μm] 
 	
 	// Set parameters and constants
-	int N_rt                 = atoi(argv[8]); // number of simulation round trips
+	int N_rt         = atoi(argv[8]); // number of simulation round trips
 
 	// Grids, crystal and cavity parameters
 	
-	real_t lp        = 0.532;          // pump wavelength   [μm]
-	real_t ls        = 1.060;//2*lp;           // signal wavelength [μm]
+	real_t lp        = 1.55;          // pump wavelength   [μm]
+	real_t ls        = 2*lp;           // signal wavelength [μm]
 	real_t li        = lp*ls/(ls-lp);  // idler wavelength  [μm]
 
 	real_t deff      = 14.77e-6;       // effective second-order susceptibility [um/V]
-	real_t Temp      = 27;             // crystal temperature [ºC]
-	real_t Lambda    = 6.97;           // grating period for QPM [μm]  
+	real_t Temp      = 32.88; //27;             // crystal temperature [ºC]
+	real_t Lambda    = 35.01; //6.97;           // grating period for QPM [μm]  
 	real_t Lcr       = 5e3;            // crystal length [um]
 		
 	real_t np        = n_PPLN(lp, Temp);         // pump ref. index
 	real_t vp        = group_vel_PPLN(lp, Temp); // pump group velocity [μm/ps]
 	real_t b2p       = gvd_PPLN(lp, Temp);       // pump GVD [ps²/μm] 
+	real_t b3p       = 0.*TOD_PPLN(lp, Temp);       // pump TOD [ps³/μm]	
 	real_t kp        = 2*PI*deff/(np*lp);        // kappa pump [1/V]
-	real_t alphap    = 0.025e-4;                 // pump linear absorption [1/μm]
+	real_t alpha_crp = 0.002e-4;                 // pump linear absorption [1/μm]
 	
 	real_t ns        = n_PPLN(ls, Temp);         // signal ref. index
 	real_t vs        = group_vel_PPLN(ls, Temp); // signal group velocity [μm/ps]
 	real_t b2s       = gvd_PPLN(ls, Temp);       // signal GVD [ps²/μm] 
+	real_t b3s       = 0.*TOD_PPLN(ls, Temp);       // pump TOD [ps³/μm]		
 	real_t ks        = 2*PI*deff/(ns*ls);        // kappa signal [1/V]
-	real_t alphas    = 0.002e-4;                 // signal linear absorption [1/μm]
+	real_t alpha_crs = 0.002e-4;                 // signal linear absorption [1/μm]
 
 	real_t ni        = n_PPLN(li, Temp);         // idler ref. index
 	real_t vi        = group_vel_PPLN(li, Temp); // idler group velocity [μm/ps]
-	real_t b2i       = gvd_PPLN(li, Temp);       // idler GVD [ps²/μm] 
+	real_t b2i       = gvd_PPLN(li, Temp);       // idler GVD [ps²/μm]
+	real_t b3i       = 0.*TOD_PPLN(li, Temp);       // pump TOD [ps³/μm]	
 	real_t ki        = 2*PI*deff/(ni*li);        // kappa idler [1/V]
-	real_t alphai    = 0.002e-4;                 // signal linear absorption [1/μm]
+	real_t alpha_cri = 0.002e-4;                 // signal linear absorption [1/μm]
 	
 	real_t dk        = 2*PI*( np/lp-ns/ls-ni/li-1/Lambda ); // mismatch factor
 	real_t dkp       = 1/vp-1/vs;                           // group velocity mismatch	
 	real_t Lcav      = atoi(argv[4]) * Lcr;                 // cavity length [um]
 	real_t Rs        = atof(argv[5])*0.01;                  // Reflectivity at signal wavelength 
+	real_t alphas    = 0.5*((1-Rs)+alpha_crs*Lcr);          // Total losses for threshold condition signal
+	real_t alphai    = 0.5*((1-Rs)+alpha_cri*Lcr);          // Total losses for threshold condition idler
 	#ifdef THREE_EQS
 	real_t Ri        = 0.60;                                // Reflectivity at idler wavelength 
 	#endif
@@ -124,7 +129,8 @@ int main(int argc, char *argv[]){
  	real_t delta     = atof(argv[6]);                       // cavity detuning [rad] 
 	real_t epsilon   = atof(argv[7])*0.01;                  // dispersion compensation index
 	real_t GDD       = -epsilon*b2s*Lcr;                    // GDD [ps²]
-
+	real_t TODscomp  = -0.01*atof(argv[13])*b3s*Lcr;        // TOD compensation [ps³]
+	real_t TODicomp  = -0.01*atof(argv[13])*b3i*Lcr;        // TOD compensation [ps³]
 	
 	// z discretization
 	int steps_z      = atoi(argv[3]); // number of crystal divisions
@@ -137,7 +143,11 @@ int main(int argc, char *argv[]){
 	int extra_win      = 0;         // extra pts for short-time slices
 	real_t dT          = t_rt/SIZE; // time step in [ps]
 	real_t dF          = 1/t_rt;    // frequency step in [THz]
-	unsigned int Nrts  = 16;        // number of last round trips to save (only for cw)
+	
+	bool video         = false;
+	unsigned int Nrts;        // number of last round trips to save (only for cw)
+	if(video){Nrts = 100;}
+	else{Nrts = 16;}	
 	
 	#ifdef CW_OPO
 	unsigned int SIZEL = SIZE*Nrts; // size of large vectors for full simulation
@@ -172,39 +182,27 @@ int main(int argc, char *argv[]){
 		w[i] = 2*PI*w[i]; // angular frequency for one round trip [2*pi*THz]
 
 	
-	// Intracavy phase modulator
-	bool using_phase_modulator = atoi(argv[10]);
-	real_t mod_depth, fpm;
-	if(using_phase_modulator){
-		mod_depth       = atof(argv[11])*PI;
-		fpm             = FSR - atof(argv[12])*1e-6;
-		
-		std::cout << "Using a phase modulator:" << std::endl;
-		std::cout << "Modulation depth (\u03B2)         = " << atof(argv[11]) << "\u03C0 rad = " << mod_depth << " rad" << std::endl;
-		std::cout << "Modulator frequency (fm)     = " << fpm*1e3 << " GHz" << std::endl;
-		std::cout << "Frequency detuning (\u03B4f)      = " << atof(argv[12]) << " MHz" << std::endl;
-	}
-	else{std::cout << "No phase modulator" << std::endl;}
-	
-
 	// Define memory size for complex host vectors
 	int nBytes   = sizeof(complex_t)*SIZE;
 	// Define input pump parameters
 	real_t waist = 55;             // beam waist radius [um]
 	real_t spot  = PI*waist*waist; // spot area [μm²]
 	#ifdef THREE_EQS
-	// Power threshold non-degenerate DRO 
-	real_t Pth   = EPS0*C*np*ns*ni*ls*li*pow((waist/deff/Lcr),2)*(1-Rs)*(1-Ri)/16/PI;
+	// Power and intensity threshold non-degenerate DRO 
+	real_t Ith   = EPS0*C*np*ns*ni*ls*li*pow((1/deff/Lcr/PI),2)*alphas*alphai/8;
+	real_t Pth   = Ith*spot;
 	#else
-	// Power threshold degenerate DRO
-	real_t Pth   = EPS0*C*np*pow( (ns*ls*waist*(1-Rs)/deff/Lcr) , 2 )/16/PI;  
+	// Power and intensity threshold degenerate DRO 
+	real_t Ith   = EPS0*C*np*powf((ns*ls*alphas/deff/Lcr/PI), 2)/8;
+	real_t Pth   = Ith*spot;
 	#endif
 	// Times over the threshold
 	real_t Nth   = atof(argv[9]); 	
-	// Pump power in times over the threshold in [W]
-	real_t Power = atof(argv[9])*Pth; 
+	// Pump intensity and power, times over the threshold in [W]
+	real_t Inten = atof(argv[9])*Ith;
+	real_t Power = Inten*spot; 
 	// Input pump field strength [V/μm]
-	real_t Ap0   = sqrt(2*Power/(spot*np*EPS0*C)) ;
+	real_t Ap0   = sqrt(2*Inten/(np*EPS0*C)) ;
 	
 	// Define input pump vector
 	#ifdef CW_OPO
@@ -229,6 +227,32 @@ int main(int argc, char *argv[]){
 	complex_t *Ai = (complex_t*)malloc(nBytes);
 	NoiseGeneratorCPU ( Ai, SIZE );
 	#endif
+
+
+	// Intracavy phase modulator
+	bool using_phase_modulator = atoi(argv[10]);
+	real_t mod_depth, fpm, df;
+	if(using_phase_modulator){
+		mod_depth       = atof(argv[11])*PI;
+		df              = atof(argv[12])*sqrtf(Nth-1)*alphas/(PI*mod_depth)*FSR;
+		fpm             = FSR - df;
+	}
+	
+	
+	// Intracavy third-order material to produce self-phase modulation (SPM)
+	bool using_SPM = atoi(argv[14]);
+	if(using_SPM){
+		std::cout << "Using third-order material." << std::endl;
+	}
+	if(!using_SPM){
+		std::cout << "Not using third-order material." << std::endl;
+	}
+	// Define these variables for SPM
+	real_t gamma   = 1e10; // nonlinear coefficient
+	real_t lfo     = 1.0;  // material length
+	real_t alphafo = 0.01; // absorption
+	
+	
 	
 	// Define string variables for saving files
 	std::string Filename, SAux, Extension = ".dat";
@@ -273,16 +297,22 @@ int main(int argc, char *argv[]){
 		#ifdef THREE_EQS
 		std::cout << "GVD idler               = " << b2i << " ps²/\u03BCm" << std::endl;		
 		#endif
+		std::cout << "TOD pump                = " << b3p << " ps³/\u03BCm" << std::endl;
+		std::cout << "TOD signal              = " << b3s << " ps³/\u03BCm" << std::endl;		
 		std::cout << "Net GVD                 = " << (1-epsilon)*b2s << " ps²/\u03BCm" << std::endl;
 		std::cout << "GVD compensation        = " << atoi(argv[7]) << " %"  << std::endl;
-		std::cout << "Cavity net dispersion   = " << (1-epsilon)*b2s*Lcr*1e6 << " fs²"  << std::endl;
+		std::cout << "Net TOD                 = " << (1-0.01*atoi(argv[13]))*b3s*Lcr*1e3 << " fs³"  << std::endl;
+		std::cout << "TOD compensation        = " << atof(argv[13]) << " %"  << std::endl;		
 		std::cout << "deff                    = " << deff*1e6 << " pm/V"  << std::endl;
 		std::cout << "\u039B                       = " << Lambda << " \u03BCm"  << std::endl;
-		std::cout << "\u03B1p                      = " << alphap << " \u03BCm⁻¹"  << std::endl;
-		std::cout << "\u03B1s                      = " << alphas << " \u03BCm⁻¹" << std::endl;
+		std::cout << "\u03B1cp                     = " << alpha_crp << " \u03BCm⁻¹"  << std::endl;
+		std::cout << "\u03B1cs                     = " << alpha_crs << " \u03BCm⁻¹" << std::endl;
+		std::cout << "\u03B1s                      = " << alphas << std::endl;
 		#ifdef THREE_EQS
-		std::cout << "\u03B1i                      = " << alphai << " \u03BCm⁻¹" << std::endl;
+		std::cout << "\u03B1i                      = " << alpha_cri << " \u03BCm⁻¹" << std::endl;
+		std::cout << "\u03B1i                      = " << alphas << std::endl;
 		#endif
+		
 		std::cout << "Crystal length          = " << Lcr*1e-3 << " mm"  << std::endl;
 		std::cout << "Cavity  length          = " << Lcav*1e-3 << " mm"  << std::endl;
 		std::cout << "\u0394z                      = " << dz << " \u03BCm"  << std::endl;
@@ -306,6 +336,18 @@ int main(int argc, char *argv[]){
 		std::cout << "Power threshold         = " << Pth << " W" << std::endl;
 		std::cout << "Power                   = " << Power << " W" << std::endl;
 		std::cout << "Times above the thres.  = " << Nth << std::endl;
+		if(using_phase_modulator){
+		std::cout << "Using a phase modulator:" << std::endl;
+		std::cout << "Mod. depth (\u03B2)          = " << atof(argv[11]) << "\u03C0 rad = " << mod_depth << " rad" << std::endl;
+		std::cout << "Freq. detuning (\u03B4f)     = " << df*1e6 << " MHz" << std::endl;
+		std::cout << "Mod. frequency(fm)      = " << fpm*1e3 << " GHz" << std::endl;
+		std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
+		std::cout << "(N,\u03B2,\u03B4f,\u03B5) = ( " << Nth << ", " << atof(argv[11]) << ", "  << std::setprecision(4) << df*1e6 << ", " << epsilon << " )\n\n" << std::endl;			
+		}
+		else{std::cout << "No phase modulator" << std::endl;
+		std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
+		std::cout << "( N, \u03B2, \u03B4f, \u03B5 ) = ( " << Nth << ", 0, 0, " << std::setprecision(2) << epsilon << " )\n\n" << std::endl;
+		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -411,6 +453,8 @@ int main(int argc, char *argv[]){
 	bool is_Ai_resonant = true;
 	#endif
 	
+	
+	
 	// Main loop (fields in the cavity)
 	unsigned int mm = 0; // counts for cw saved round trips
 	for (int nn = 0; nn < N_rt; nn++){
@@ -428,24 +472,36 @@ int main(int argc, char *argv[]){
 		#endif
 				
 		#ifdef THREE_EQS // Single pass for coupled wave equations (2 or 3)
-		EvolutionInCrystal( w_gpu, grid, block, Ap_gpu, As_gpu, Ai_gpu, Apw_gpu, Asw_gpu, Aiw_gpu, k1p_gpu, k1s_gpu, k1i_gpu, k2p_gpu, k2s_gpu, k2i_gpu, k3p_gpu, k3s_gpu, k3i_gpu, k4p_gpu, k4s_gpu, k4i_gpu, auxp_gpu, auxs_gpu, auxi_gpu, lp, ls, li, vp, vs, vi, b2p, b2s, b2i, dk, alphap, alphas, alphai, kp, ks, ki, dz, steps_z, SIZE );
+		EvolutionInCrystal( w_gpu, grid, block, Ap_gpu, As_gpu, Ai_gpu, Apw_gpu, Asw_gpu, Aiw_gpu, k1p_gpu, k1s_gpu, k1i_gpu, k2p_gpu, k2s_gpu, k2i_gpu, k3p_gpu, k3s_gpu, k3i_gpu, k4p_gpu, k4s_gpu, k4i_gpu, auxp_gpu, auxs_gpu, auxi_gpu, lp, ls, li, vp, vs, vi, b2p, b2s, b2i, b3p, b3s, b3i, dk, alpha_crp, alpha_crs, alpha_cri, kp, ks, ki, dz, steps_z, SIZE );
 		#else
-		EvolutionInCrystal( w_gpu, grid, block, Ap_gpu, As_gpu, Apw_gpu, Asw_gpu, k1p_gpu, k1s_gpu, k2p_gpu, k2s_gpu, k3p_gpu, k3s_gpu, k4p_gpu, k4s_gpu, auxp_gpu, auxs_gpu, lp, ls, vp, vs, b2p, b2s, dk, alphap, alphas, kp, ks, dz, steps_z, SIZE );
+		EvolutionInCrystal( w_gpu, grid, block, Ap_gpu, As_gpu, Apw_gpu, Asw_gpu, k1p_gpu, k1s_gpu, k2p_gpu, k2s_gpu, k3p_gpu, k3s_gpu, k4p_gpu, k4s_gpu, auxp_gpu, auxs_gpu, lp, ls, vp, vs, b2p, b2s, b3p, b3s, dk, alpha_crp, alpha_crs, kp, ks, dz, steps_z, SIZE );
 		#endif
 		
 		
 		if(GDD!=0){
 			AddGDD<<<grid,block>>>(Asw_gpu, auxs_gpu, w_gpu, GDD, SIZE);
+// 			AddGDDTOD<<<grid,block>>>(Asw_gpu, auxs_gpu, w_gpu, GDD, TODscomp, SIZE);
 			CHECK(cudaDeviceSynchronize());
 			cufftExecC2C(plan1D, (complex_t *)Asw_gpu, (complex_t *)As_gpu, CUFFT_FORWARD);
 			CHECK(cudaDeviceSynchronize());
 			#ifdef THREE_EQS
 			AddGDD<<<grid,block>>>(Aiw_gpu, auxi_gpu, w_gpu, GDD, SIZE);
+// 			AddGDDTOD<<<grid,block>>>(Aiw_gpu, auxi_gpu, w_gpu, GDD, TODicomp, SIZE);
 			CHECK(cudaDeviceSynchronize());
 			cufftExecC2C(plan1D, (complex_t *)Aiw_gpu, (complex_t *)Ai_gpu, CUFFT_FORWARD);
 			CHECK(cudaDeviceSynchronize());
 			#endif
 		}		
+		
+		if( using_phase_modulator ){ // use an intracavy phase modulator of one o more fields
+			PhaseModulatorIntraCavity<<<grid,block>>>(As_gpu, auxs_gpu, mod_depth, fpm, T_gpu, SIZE);
+			CHECK(cudaDeviceSynchronize());
+		}
+		
+		if( using_SPM ){ // use an intracavy third-order material
+			SelfPhaseModulation<<<grid,block>>>(As_gpu, auxs_gpu, gamma, lfo, alphafo, SIZE);
+			CHECK(cudaDeviceSynchronize());
+		}
 		
 		if (is_As_resonant){ // if As is resonant, adds phase and losses
 			AddPhase<<<grid,block>>>(As_gpu, auxs_gpu, Rs, delta, nn, SIZE);
@@ -459,38 +515,48 @@ int main(int argc, char *argv[]){
 		}
 		#endif
 		
-		
-		if( using_phase_modulator ){ // use an intracavy phase modulator of one o more fields
-			PhaseModulatorIntraCavity<<<grid,block>>>(As_gpu, auxs_gpu, mod_depth, fpm, T_gpu, SIZE);
-			CHECK(cudaDeviceSynchronize());
-		}
 		#ifdef CW_OPO	
-		if (nn >= N_rt-Nrts){ // put each round trip in Ax_total_gpu (x=p,s,i)
-			SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, mm, extra_win, Nrts, SIZE ); // saves signal
-			CHECK(cudaDeviceSynchronize());
-			SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, mm, extra_win, Nrts, SIZE ); // saves pump
-			CHECK(cudaDeviceSynchronize());
-			#ifdef THREE_EQS
-			SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, mm, extra_win, Nrts, SIZE ); // saves idler
-			CHECK(cudaDeviceSynchronize());
-			#endif
-			mm += 1;
+		if (video){
+			if (nn % 100 == 0){      
+				std::cout << "Saving the " << nn << "-th round trip" << std::endl;
+				SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, mm, extra_win, Nrts, SIZE ); // saves signal
+				CHECK(cudaDeviceSynchronize());
+				SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, mm, extra_win, Nrts, SIZE ); // saves pump
+				CHECK(cudaDeviceSynchronize());
+				#ifdef THREE_EQS
+				SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, mm, extra_win, Nrts, SIZE ); // saves idler
+				CHECK(cudaDeviceSynchronize());
+				#endif
+				mm += 1;
+			}			
+		}
+		else{
+			if (nn >= N_rt -Nrts){                
+				SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, mm, extra_win, Nrts, SIZE ); // saves signal
+				CHECK(cudaDeviceSynchronize());
+				SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, mm, extra_win, Nrts, SIZE ); // saves pump
+				CHECK(cudaDeviceSynchronize());
+				#ifdef THREE_EQS
+				SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, mm, extra_win, Nrts, SIZE ); // saves idler
+				CHECK(cudaDeviceSynchronize());
+				#endif
+				mm += 1;
+			}
 		}
 		#endif
 		#ifdef NS_OPO		
-		SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, nn, extra_win, N_rt, SIZE ); // saves signal
-		CHECK(cudaDeviceSynchronize());
-		SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, nn, extra_win, N_rt, SIZE ); // saves pump
-		CHECK(cudaDeviceSynchronize());
-		#ifdef THREE_EQS
-		SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, nn, extra_win, N_rt, SIZE ); // saves idler
-		CHECK(cudaDeviceSynchronize());
-		#endif
+			SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, nn, extra_win, N_rt, SIZE ); // saves signal
+			CHECK(cudaDeviceSynchronize());
+			SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, nn, extra_win, N_rt, SIZE ); // saves pump
+			CHECK(cudaDeviceSynchronize());
+			#ifdef THREE_EQS
+			SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, nn, extra_win, N_rt, SIZE ); // saves idler
+			CHECK(cudaDeviceSynchronize());
+			#endif
 		#endif
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////
-	
 	
 	
 	
@@ -502,7 +568,7 @@ int main(int argc, char *argv[]){
 	if (save_vectors == 1){
 		std::cout << "\nSaving time and frequency vectors...\n" << std::endl;
 		Filename = "Tp"; SaveFileVectorReal (Tp, SIZEL, Filename+Extension);
-		Filename = "freq"; SaveFileVectorReal (Fp, SIZEL, Filename+Extension);
+ 		Filename = "freq"; SaveFileVectorReal (Fp, SIZEL, Filename+Extension);
 		Filename = "T"; SaveFileVectorReal (T, SIZE, Filename+Extension);
 	}
 	else{ std::cout << "\nTime and frequency were previuosly save...\n" << std::endl;
@@ -549,12 +615,12 @@ int main(int argc, char *argv[]){
 
 	
 	#ifdef THREE_EQS
-	free(Ai); free(Ai_total);
-
-	CHECK(cudaFree(Ai_gpu));	CHECK(cudaFree(Ai_total_gpu));
-	CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
-	CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
-	CHECK(cudaFree(auxi_gpu));
+		free(Ai); free(Ai_total);
+		
+		CHECK(cudaFree(Ai_gpu));	CHECK(cudaFree(Ai_total_gpu));
+		CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
+		CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
+		CHECK(cudaFree(auxi_gpu));
 	#endif
 
 	// Destroy CUFFT context and reset the GPU
@@ -578,3 +644,61 @@ int main(int argc, char *argv[]){
 	
 	return 0;
 }
+
+
+/**
+ Letter   Description  Escape-Sequence
+-------------------------------------
+A        Alpha        \u0391
+B        Beta         \u0392
+Γ        Gamma        \u0393
+Δ        Delta        \u0394
+Ε        Epsilon      \u0395
+Ζ        Zeta         \u0396
+Η        Eta          \u0397
+Θ        Theta        \u0398
+Ι        Iota         \u0399
+Κ        Kappa        \u039A
+Λ        Lambda       \u039B
+Μ        Mu           \u039C
+Ν        Nu           \u039D
+Ξ        Xi           \u039E
+Ο        Omicron      \u039F
+Π        Pi           \u03A0
+Ρ        Rho          \u03A1
+Σ        Sigma        \u03A3
+Τ        Tau          \u03A4
+Υ        Upsilon      \u03A5
+Φ        Phi          \u03A6
+Χ        Chi          \u03A7
+Ψ        Psi          \u03A8
+Ω        Omega        \u03A9 
+-------------------------------------
+Letter   Description  Escape-Sequence
+-------------------------------------
+α        Alpha        \u03B1
+β        Beta         \u03B2
+γ        Gamma        \u03B3
+δ        Delta        \u03B4
+ε        Epsilon      \u03B5
+ζ        Zeta         \u03B6
+η        Eta          \u03B7
+θ        Theta        \u03B8
+ι        Iota         \u03B9
+κ        Kappa        \u03BA
+λ        Lambda       \u03BB
+μ        Mu           \u03BC
+ν        Nu           \u03BD
+ξ        Xi           \u03BE
+ο        Omicron      \u03BF
+π        Pi           \u03C0
+ρ        Rho          \u03C1
+σ        Sigma        \u03C3
+τ        Tau          \u03C4
+υ        Upsilon      \u03C5
+φ        Phi          \u03C6
+χ        Chi          \u03C7
+ψ        Psi          \u03C8
+ω        Omega        \u03C9
+-------------------------------------
+*/

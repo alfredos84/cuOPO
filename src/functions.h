@@ -2,6 +2,7 @@
 // * This file contains a set of functions useful for the execution of the main file.
 /*---------------------------------------------------------------------------*/
 
+
 #ifndef _FUNCTIONSCUH
 #define _FUNCTIONSCUH
 
@@ -154,7 +155,7 @@ __global__ void AddPhase(complex_t *A, complex_t *aux, real_t R, real_t delta, i
 }
 
 
-/** This function compensates the dispersion (GVD*crystal length)
+/** This function compensates the dispersion (GVD crystal length)
  *after a single-pass through the nonlinear crystal */
 __global__ void AddGDD(complex_t *A, complex_t *aux, real_t *w, real_t GDD, int SIZE)
 {
@@ -172,6 +173,25 @@ __global__ void AddGDD(complex_t *A, complex_t *aux, real_t *w, real_t GDD, int 
 	
 	return ;
 }
+
+
+__global__ void AddGDDTOD(complex_t *A, complex_t *aux, real_t *w, real_t GDD,  real_t TOD, int SIZE)
+{
+	
+	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
+	
+	if (idx < SIZE){
+		aux[idx].x = A[idx].x * cosf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6)) - A[idx].y * sinf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6));
+		aux[idx].y = A[idx].x * sinf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6)) + A[idx].y * cosf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6));
+	}
+	if (idx < SIZE){
+		A[idx].x = aux[idx].x;
+		A[idx].y = aux[idx].y;
+	}	
+	
+	return ;
+}
+
 
 /** Reads a large vector where the input pump is stored.
  * For nanosecond regime the input pulse is divided into hundres of round trips. */
@@ -244,6 +264,26 @@ __global__ void PhaseModulatorIntraCavity(complex_t *A, complex_t *aux, real_t m
 	if (idx < SIZE){
 		A[idx].x = aux[idx].x;
 		A[idx].y = aux[idx].y;
+	}
+
+	return ;
+}
+
+
+/** XXXXXXXXXXXXXXXXXXXXX to an electric field after one round trip. */
+__global__ void SelfPhaseModulation(complex_t *A, complex_t *aux, real_t gamma, real_t L, real_t alphaS, int SIZE)
+{
+	
+	real_t att = expf(-0.5*alphaS*L);
+	
+	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
+	if (idx < SIZE){
+		aux[idx].x = A[idx].x*cosf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y)) + A[idx].y*sinf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y));
+		aux[idx].y = A[idx].y*cosf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y)) - A[idx].x*sinf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y));
+	}
+	if (idx < SIZE){
+		A[idx].x = aux[idx].x * att;
+		A[idx].y = aux[idx].y * att;
 	}
 
 	return ;

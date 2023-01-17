@@ -10,6 +10,8 @@
 /*---------------------------------------------------------------------------*/
 
 
+
+
 #ifndef _REFINDEXCUH
 #define _REFINDEXCUH
 
@@ -107,16 +109,39 @@ __host__ __device__ real_t d2ndl2_PPLN(real_t L,real_t T){
 	real_t a3 = 0.2020;
 	real_t a4 = 189.32;
 	real_t a5 = 12.52;
-	real_t b2 =  4.700e-8;
-	real_t b3 =  6.113e-8;
-	real_t b4 =  1.516e-4;
+	real_t b2 = 4.700e-8;
+	real_t b3 = 6.113e-8;
+	real_t b4 = 1.516e-4;
 	real_t G2 = a2+b2*f;
 	real_t G3 = a3+b3*f;
 	real_t G4 = a4+b4*f;
-	real_t A =((n_PPLN(L,T)-L*dndl_PPLN(L,T))/n_PPLN(L,T))*dndl_PPLN(L,T)/L;
-	real_t B = (G2/powf(powf(L,2)-powf(G3,2),3) + G4/powf(powf(L,2)-powf(a5,2),3))*4*L*L/n_PPLN(L,T);
+	real_t A  = ((n_PPLN(L,T)-L*dndl_PPLN(L,T))/n_PPLN(L,T))*dndl_PPLN(L,T)/L;
+	real_t B  = (G2/powf(powf(L,2)-powf(G3,2),3) + G4/powf(powf(L,2)-powf(a5,2),3))*4*L*L/n_PPLN(L,T);
 	
 	return A+B;
+	
+}
+
+
+/** Returns the third-order derivative of the
+ * refractive index respect to the wavelength d³n/dλ³. */
+__host__ __device__ real_t d3ndl3_PPLN(real_t L,real_t T){
+
+	real_t f = (T - 24.5) * (T + 570.82);
+	real_t a2 = 0.0983;
+	real_t a3 = 0.2020;
+	real_t a4 = 189.32;
+	real_t a5 = 12.52;
+	real_t b2 = 4.700e-8;
+	real_t b3 = 6.113e-8;
+	real_t b4 = 1.516e-4;
+	real_t G2 = a2+b2*f;
+	real_t G3 = a3+b3*f;
+	real_t G4 = a4+b4*f;
+	real_t G  = G2/powf(powf(L,2)-powf(G3,2),3) + G4/powf(powf(L,2)-powf(a5,2),3);
+	real_t dG = -6*L*(G2/powf(powf(L,2)-powf(G3,2),4) + G4/powf(powf(L,2)-powf(a5,2),4));
+
+	return d2ndl2_PPLN(L,T)*(1-2*dndl_PPLN(L,T)/n_PPLN(L,T)) + powf(dndl_PPLN(L,T),3)/powf(n_PPLN(L,T),2) + 4*L*L/n_PPLN(L,T)*dG + G*(8*L/n_PPLN(L,T)-powf(L/dndl_PPLN(L,T),2));
 	
 }
 
@@ -128,13 +153,16 @@ __host__ __device__ real_t group_vel_PPLN(real_t L,real_t T){
 }
 
 
-/** Returns the group-velocity β(λ)=λ^3/(2πc²)(d²n/dλ²). */
+/** Returns the group-velocity β2(λ)=λ^3/(2πc²)(d²n/dλ²). */
 __host__ __device__ real_t gvd_PPLN(real_t L,real_t T){
 	return powf(L,3)*d2ndl2_PPLN(L, T)/(2*PI*C*C);
 }
 
 
-
+/** Returns the TOD β3(λ)=-λ^4/(4π²c³)[3.d²n/dλ² + λ.d³n/dλ³]. */
+__host__ __device__ real_t TOD_PPLN(real_t L,real_t T){
+	return -powf(L,4)/(4*PI*PI*C*C*C)*(3*d2ndl2_PPLN(L, T)+L*d3ndl3_PPLN(L, T));
+}
 
 
 

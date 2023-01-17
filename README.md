@@ -43,9 +43,9 @@ where the preprocessor variable `<REGIME>` could be either `CW_OPO` or `NS_OPO`.
 
 Finally, the execution is done using the command line in the `cuOPO.sh` file is
 ```
-./cuOPO $ARG1 $ARG2 $ARG3 $ARG4 $R $DELTAS $GDD $ARG8 $N $U $MODDEP $FREQMOD | tee -a $FILE
+/cuOPO $ARG1 $ARG2 $ARG3 $ARG4 $R $DELTAS $GDD $ARG8 $N $U $MODDEP $FREQMOD $TOD $SPM | tee -a $FILE
 ```
-where `$ARGx` and others variables externaly passed to the main file `cuOPO.cu`. It was written in this way to make easy to massively perform simulations.
+where `$ARGx` and others are variables externaly passed to the main file `cuOPO.cu`. It was written in this way to make easier performing simulations massively.
 
 ### Outputs
 

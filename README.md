@@ -19,7 +19,7 @@ git clone https://github.com/alfredos84/cuOPO.git
 ```
 Once the project was cloned, the user will find a parent folder `cuOPO` containing two other
 - `src`: contains the main file `cuOPO.cu`, the header files `<header>.h`, and the bash file `cuOPO.sh` used to compile and execute the package by passing several simulations parameters.
-- `cw_2eqs_PPLN_beta_0.8_N_4_GDD_100`: this folder contains the output files for a given set of parameters and should be taken as an example. After cloning the project, this folder should be **renamed** before running the first test simulation. If not, the new files will replace the older ones.
+- `cw_2eqs_PPLN_beta_0_N_4_GDD_0_LP_532nm`: this folder contains the output files for a given set of parameters and should be taken as an example. After cloning the project, this folder should be **renamed** before running the first test simulation. If not, the new files will replace the older ones.
 
 ### Bash file `src/cuOPO.sh`
 
@@ -33,7 +33,7 @@ Finally, to execute the file execute the following command line
 ./cuOPO.sh         # execute the files
 ```
 
-When finished a new folder named `cw_2eqs_PPLN_beta_0.8_N_4_GDD_100` will have been created containing the output files.
+When finished a new folder named `cw_2eqs_PPLN_beta_0_N_4_GDD_0_LP_532nm` will have been created containing the output files.
 
 In the `cuOPO.sh` file you will find the command line for the compilation:
 ```
@@ -43,7 +43,7 @@ where the preprocessor variable `<REGIME>` could be either `CW_OPO` or `NS_OPO`.
 
 Finally, the execution is done using the command line in the `cuOPO.sh` file is
 ```
-/cuOPO $ARG1 $ARG2 $ARG3 $ARG4 $R $DELTAS $GDD $ARG8 $N $U $MODDEP $FREQMOD $TOD $SPM | tee -a $FILE
+./cuOPO $ARG1 $ARG2 $ARG3 $ARG4 $R $DELTAS $GDD $ARG8 $N $U $MODDEP $FREQMOD $TOD $SPM $L $TEMP $GRPER | tee -a $FILE
 ```
 where `$ARGx` and others are variables externaly passed to the main file `cuOPO.cu`. It was written in this way to make easier performing simulations massively.
 

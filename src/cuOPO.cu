@@ -41,8 +41,7 @@ int main(int argc, char *argv[]){
 	
 	std::cout << "\n\n\n#######---Welcome to OPO calculator---#######\n\n\n" << std::endl;
 	
-	// timing the code
-	time_t current_time;
+	time_t current_time; // timing the code
 	time(&current_time);
 	std::cout << "Date: " << ctime(&current_time) << std::endl;
 	real_t iStart = seconds();
@@ -72,16 +71,15 @@ int main(int argc, char *argv[]){
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////////
-	// Define relevant parameters
-	
+	// Define relevant parameters //	
 	const real_t PI   = 3.14159265358979323846;          //pi
 	const real_t C    = 299792458*1E6/1E12;              // speed of ligth in vacuum [um/ps]
 	const real_t EPS0 = 8.8541878128E-12*1E12/1E6;       // vacuum pertivity [W.ps/V²μm] 
 	
-	// Set parameters and constants
+	// Set parameters and constants //
 	int N_rt         = atoi(argv[8]); // number of simulation round trips
 
-	// Grids, crystal and cavity parameters	
+	// Grids, crystal and cavity parameters //
 	real_t lp        = atof(argv[15])*1e-3;  // pump wavelength   [μm]
 	real_t ls        = 2*lp;           // signal wavelength [μm]
 	real_t li        = lp*ls/(ls-lp);  // idler wavelength  [μm]
@@ -234,7 +232,7 @@ int main(int argc, char *argv[]){
 	#endif
 	
 	
-	// // Define input signal vector (NOISE)
+	// Define input signal vector (NOISE)
 	complex_t *As = (complex_t*)malloc(nBytes);
 	NoiseGeneratorCPU ( As, SIZE );
 	
@@ -268,7 +266,7 @@ int main(int argc, char *argv[]){
 	real_t lfo        = 1.0;  // material length
 	real_t alphafo    = 0.01; // absorption
 	
-		
+	
 	// Define string variables for saving files
 	std::string Filename, SAux, Extension = ".dat";
 	bool save_input_fields = true;	// Save input fields files
@@ -286,8 +284,8 @@ int main(int argc, char *argv[]){
 	}
 	
 	
-	// Print parameters on screen
-	bool print_param_on_screen = true;
+	
+	bool print_param_on_screen = true;	// Print parameters on screen
 	if ( print_param_on_screen ){
 		std::cout << "\n\nSimulation parameters:\n\n " << std::endl;
 		std::cout << "Number of round trips   = " << N_rt  << std::endl;
@@ -370,12 +368,11 @@ int main(int argc, char *argv[]){
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////////
-	// Define GPU vectors
+	// Define GPU vectors //
 	
 	// Parameters for kernels
 	int dimx = 1 << 7;
-	dim3 block(dimx);
-	dim3 grid((SIZE + block.x - 1) / block.x);
+	dim3 block(dimx); dim3 grid((SIZE + block.x - 1) / block.x);
 	
 
 	std::cout << "Setting constants and vectors in device..." << std::endl;
@@ -415,7 +412,7 @@ int main(int argc, char *argv[]){
 	CHECK(cudaMemcpy(w_gpu, w, sizeof(real_t) * SIZE , cudaMemcpyHostToDevice));
 	
     
-	// RK4 (kx) and auxiliary (aux) GPU vectors 
+	// RK4 (kx) and auxiliary (aux) GPU vectors
 	complex_t *k1p_gpu, *k2p_gpu, *k3p_gpu, *k4p_gpu, *k1s_gpu, *k2s_gpu, *k3s_gpu, *k4s_gpu;
 	CHECK(cudaMalloc((void **)&k1p_gpu, nBytes ));	CHECK(cudaMalloc((void **)&k2p_gpu, nBytes ));
 	CHECK(cudaMalloc((void **)&k3p_gpu, nBytes ));	CHECK(cudaMalloc((void **)&k4p_gpu, nBytes ));
@@ -580,10 +577,9 @@ int main(int argc, char *argv[]){
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////////	
-	// Saving results in .dat files using the function SaveFileVectorComplex()
+	// Saving results in .dat files using the function SaveFileVectorComplex() //
 	
-	
-	// decide whether or not save these vectors in the cuOPO.sh file
+	// Decide whether or not save these vectors in the cuOPO.sh file
 	short unsigned int save_vectors = atoi(argv[1]);
 	if (save_vectors == 1){
 		std::cout << "\nSaving time and frequency vectors...\n" << std::endl;
@@ -594,7 +590,7 @@ int main(int argc, char *argv[]){
 	else{ std::cout << "\nTime and frequency were previuosly save...\n" << std::endl;
 	}
 	
-	// Define vectors to save the full simulation
+	// Define CPU vectors to save the full simulation
 	complex_t *As_total   = (complex_t*)malloc(sizeof(complex_t) * SIZEL);
 	complex_t *Ap_total   = (complex_t*)malloc(sizeof(complex_t) * SIZEL);
 	
@@ -624,7 +620,7 @@ int main(int argc, char *argv[]){
 	free(As_total); free(Ap_in); free(Ap_total);
 
 	CHECK(cudaFree(As_gpu)); 		CHECK(cudaFree(Ap_gpu));
-	CHECK(cudaFree(As_total_gpu));	CHECK(cudaFree(Ap_total_gpu));
+	CHECK(cudaFree(As_total_gpu));	        CHECK(cudaFree(Ap_total_gpu));
 	CHECK(cudaFree(Ap_in_gpu));	
 	CHECK(cudaFree(T_gpu)); 		CHECK(cudaFree(w_gpu));
 	CHECK(cudaFree(k1p_gpu));		CHECK(cudaFree(k2p_gpu));
@@ -633,11 +629,10 @@ int main(int argc, char *argv[]){
 	CHECK(cudaFree(k3s_gpu));        	CHECK(cudaFree(k4s_gpu));	
 	CHECK(cudaFree(auxs_gpu));       	CHECK(cudaFree(auxp_gpu));
 
-	
 	#ifdef THREE_EQS
 		free(Ai); free(Ai_total);
 		
-		CHECK(cudaFree(Ai_gpu));	CHECK(cudaFree(Ai_total_gpu));
+		CHECK(cudaFree(Ai_gpu));      CHECK(cudaFree(Ai_total_gpu));
 		CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
 		CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
 		CHECK(cudaFree(auxi_gpu));

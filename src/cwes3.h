@@ -50,6 +50,7 @@ using real_t = float;
 // save in dAp, dAs, dAi the evolved electric fields
 __global__ void dAdz( complex_t *dAp, complex_t *dAs,  complex_t *dAi, complex_t *Ap, complex_t *As, complex_t *Ai, real_t lp, real_t ls, real_t li, real_t kp, real_t ks, real_t ki, real_t dk, real_t z, int SIZE )
 {
+	complex_t Im; Im.x = 0; Im.y = 1;
 	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	

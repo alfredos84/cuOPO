@@ -42,6 +42,165 @@ __host__ __device__ real_t sinc(  real_t x  )
 }
 
 
+//* Overloaded operators for complex numbers */
+__host__ __device__ inline complex_t  operator+(const real_t &a, const complex_t &b) {
+	
+	complex_t c;    
+	c.x = a   + b.x;
+	c.y =     + b.y;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator+(const complex_t &b, const real_t &a) {
+	
+	complex_t c;    
+	c.x = a   + b.x;
+	c.y =     + b.y;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator+(const complex_t &a, const complex_t &b) {
+	
+	complex_t c;    
+	c.x = a.x + b.x;
+	c.y = a.y + b.y;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator-(const real_t &a, const complex_t &b) {
+	
+	complex_t c;    
+	c.x = a   - b.x;
+	c.y =     - b.y;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator-(const complex_t &b, const real_t &a) {
+	
+	complex_t c;    
+	c.x = a   - b.x;
+	c.y =     - b.y;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator-(const complex_t &a, const complex_t &b) {
+	
+	complex_t c;    
+	c.x = a.x - b.x;
+	c.y = a.y - b.y;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator*(const real_t &a, const complex_t &b) {
+	
+	complex_t c;    
+	c.x = a * b.x ;
+	c.y = a * b.y ;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator*(const complex_t &b, const real_t &a) {
+	
+	complex_t c;    
+	c.x = a * b.x ;
+	c.y = a * b.y ;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator*(const complex_t &a, const complex_t &b) {
+	
+	complex_t c;    
+	c.x = a.x * b.x - a.y * b.y ;
+	c.y = a.x * b.y + a.y * b.x ;
+	
+	return c;
+}
+
+
+__host__ __device__ inline complex_t  operator/(const complex_t &b, const real_t &a) {
+	
+	complex_t c;    
+	c.x = b.x / a ;
+	c.y = b.y / a ;
+	
+	return c;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//* Complex functions //
+
+__host__ __device__ complex_t CpxExp (real_t a)
+{	
+	//exp(i*a)
+	complex_t b;
+	b.x = cos(a) ;	b.y = sin(a) ;
+	
+	return b;
+}
+
+
+__host__ __device__ complex_t CpxConj (complex_t a)
+{
+	// conjugate a*
+	complex_t b;
+	b.x = +a.x ; b.y = -a.y ;
+	
+	return b;
+}
+
+
+__host__ __device__ real_t CpxAbs (complex_t a)
+{
+	// |a|
+	real_t b;
+	b = sqrt(a.x*a.x + a.y*a.y);
+	
+	return b;
+}
+
+
+__host__ __device__ real_t CpxAbs2 (complex_t a)
+{
+	// |a|^2
+	real_t b;
+	b = a.x*a.x + a.y*a.y;
+	
+	return b;
+}
+
+
+__global__ void ComplexProductGPU (complex_t *c, complex_t *a, complex_t *b, uint nx, uint ny)
+{
+	// kernel complex multiplication
+	unsigned long int column = threadIdx.x + blockIdx.x * blockDim.x;
+	unsigned long int row = blockIdx.y;
+	
+	
+	if( column < nx and row < ny){
+		c[row*nx+column] = a[row*nx+column] * b[row*nx+column] ;
+	}
+	return ;
+}
+
+
+
+
 /** Noise generator for initial signal/idler vectors  */
 void NoiseGeneratorCPU ( complex_t *A,  unsigned int SIZE )
 {
@@ -60,8 +219,8 @@ void NoiseGeneratorCPU ( complex_t *A,  unsigned int SIZE )
 
 
 /** Define an input field (usually the pump field) in the time
- domain. This function is overloaded and its use depends on
- the employed regime (cw, nanosecond or user-defined)*/
+ * domain. This function is overloaded and its use depends on
+ * the employed regime (cw, nanosecond or user-defined)*/
 void input_field_T(complex_t *A, real_t A0, real_t *T, real_t T0, int SIZE)
 {
 	std::cout << "Wave:                   Gaussian pulse\n" << std::endl;
@@ -75,8 +234,8 @@ void input_field_T(complex_t *A, real_t A0, real_t *T, real_t T0, int SIZE)
 
 
 /** Define an input field (usually the pump field) in the time
- domain. This function is overloaded and its use depends on
- the employed regime (cw, nanosecond or user-defined)*/
+ * domain. This function is overloaded and its use depends on
+ * the employed regime (cw, nanosecond or user-defined)*/
 void input_field_T(complex_t *A, real_t A0, int SIZE )
 {
 	std::cout << "Wave:                   Continuous Wave\n" << std::endl;
@@ -105,7 +264,7 @@ void inic_vector_F(real_t *F, int SIZE, real_t DF)
 	for (int i = 0; i < SIZE; i++){
 		F[i] = i * DF - SIZE* DF/2.0;
 	}
-
+	
 	return ;
 }
 
@@ -117,7 +276,7 @@ void fftshift( real_t *W_flip, real_t *W, int SIZE )
 		W_flip[i+c] = W[i];
 		W_flip[i]   = W[i+c];
 	}
-
+	
 	return ;
 }
 
@@ -126,12 +285,11 @@ void fftshift( real_t *W_flip, real_t *W, int SIZE )
 __global__ void CUFFTscale(complex_t *A, int SIZE, real_t s)
 {
 	unsigned long int idx = blockIdx.x*blockDim.x+threadIdx.x;
-    
+	
 	if ( idx < SIZE){
-		A[idx].x = A[idx].x / s;
-		A[idx].y = A[idx].y / s;
+		A[idx] = A[idx] / s;
 	}
-
+	
 	return ;
 }
 
@@ -139,18 +297,16 @@ __global__ void CUFFTscale(complex_t *A, int SIZE, real_t s)
 /** Add phase (delta) and losses (R) after a single-pass through the nonlinear crystal */
 __global__ void AddPhase(complex_t *A, complex_t *aux, real_t R, real_t delta, int nn, int SIZE)
 {
-
+	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
+	
 	if (idx < SIZE){
-		aux[idx].x = sqrtf(R) * ( A[idx].x * cosf(PI*(nn+delta)) - A[idx].y * sinf(PI*(nn+delta)) );
-		aux[idx].y = sqrtf(R) * ( A[idx].y * cosf(PI*(nn+delta)) + A[idx].x * sinf(PI*(nn+delta)) );
+		aux[idx] = sqrtf(R) * A[idx] * CpxExp(PI*(nn+delta));
 	}
 	if (idx < SIZE){
-		A[idx].x = aux[idx].x;
-		A[idx].y = aux[idx].y;
+		A[idx] = aux[idx];
 	}
-
+	
 	return ;
 }
 
@@ -161,14 +317,12 @@ __global__ void AddGDD(complex_t *A, complex_t *aux, real_t *w, real_t GDD, int 
 {
 	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
+	
 	if (idx < SIZE){
-		aux[idx].x = A[idx].x * cosf(0.5*w[idx]*w[idx]*GDD) - A[idx].y * sinf(0.5*w[idx]*w[idx]*GDD);
-		aux[idx].y = A[idx].x * sinf(0.5*w[idx]*w[idx]*GDD) + A[idx].y * cosf(0.5*w[idx]*w[idx]*GDD);
+		aux[idx] = A[idx] * CpxExp( 0.5*w[idx]*w[idx]*GDD );
 	}
 	if (idx < SIZE){
-		A[idx].x = aux[idx].x;
-		A[idx].y = aux[idx].y;
+		A[idx] = aux[idx];
 	}
 	
 	return ;
@@ -181,12 +335,10 @@ __global__ void AddGDDTOD(complex_t *A, complex_t *aux, real_t *w, real_t GDD,  
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if (idx < SIZE){
-		aux[idx].x = A[idx].x * cosf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6)) - A[idx].y * sinf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6));
-		aux[idx].y = A[idx].x * sinf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6)) + A[idx].y * cosf(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6));
+		aux[idx] = A[idx] * CpxExp(w[idx]*(0.5*w[idx]*GDD + w[idx]*w[idx]*TOD/6));
 	}
 	if (idx < SIZE){
-		A[idx].x = aux[idx].x;
-		A[idx].y = aux[idx].y;
+		A[idx] = aux[idx];
 	}	
 	
 	return ;
@@ -197,26 +349,23 @@ __global__ void AddGDDTOD(complex_t *A, complex_t *aux, real_t *w, real_t GDD,  
  * For nanosecond regime the input pulse is divided into hundres of round trips. */
 __global__ void ReadPump( complex_t *Ap, complex_t *Ap_total, int N_rt, int nn, int extra_win, int SIZE )
 {
-		
+	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if(nn == 0){
 		if (idx < (SIZE+extra_win)){
-			Ap[idx].x = Ap_total[idx].x;
-			Ap[idx].y = Ap_total[idx].y;
+			Ap[idx] = Ap_total[idx];
 		}
 	}
 	else if(nn > 0 && nn < (N_rt-1)){
 		int aux1 = extra_win/2;
 		if (idx < (SIZE+extra_win)){
-			Ap[idx].x = Ap_total[idx + (nn*SIZE + aux1)].x;
-			Ap[idx].y = Ap_total[idx + (nn*SIZE + aux1)].y;
+			Ap[idx] = Ap_total[idx + (nn*SIZE + aux1)];
 		}
 	}
 	else{
 		if (idx < (SIZE+extra_win)){
-			Ap[idx].x = Ap_total[idx + (SIZE*N_rt-1)-(SIZE+extra_win)].x;
-			Ap[idx].y = Ap_total[idx + (SIZE*N_rt-1)-(SIZE+extra_win)].y;
+			Ap[idx] = Ap_total[idx + (SIZE*N_rt-1)-(SIZE+extra_win)];
 		}
 	}
 	
@@ -226,25 +375,22 @@ __global__ void ReadPump( complex_t *Ap, complex_t *Ap_total, int N_rt, int nn, 
 
 /** Save the electric field after one round trip. */
 __global__ void SaveRoundTrip( complex_t *A_total, complex_t *A, int nn, int extra_win, int N_rt, int SIZE ){
-		
+	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if(nn == 0){
 		if (idx < SIZE){
-			A_total[idx].x = A[idx].x;
-			A_total[idx].y = A[idx].y;
+			A_total[idx] = A[idx];
 		}
 	}
 	else if(nn > 0 && nn<(N_rt-1)){
 		if (idx < SIZE){
-			A_total[idx + nn*SIZE].x = A[idx + extra_win/2].x;
-			A_total[idx + nn*SIZE].y = A[idx + extra_win/2].y;
+			A_total[idx + nn*SIZE] = A[idx + extra_win/2];
 		}
 	}
 	else{
 		if (idx < SIZE){
-			A_total[idx + nn*SIZE].x = A[idx + extra_win].x;
-			A_total[idx + nn*SIZE].y = A[idx + extra_win].y;
+			A_total[idx + nn*SIZE] = A[idx + extra_win];
 		}
 	}
 	
@@ -258,19 +404,16 @@ __global__ void PhaseModulatorIntraCavity(complex_t *A, complex_t *aux, real_t m
 	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	if (idx < SIZE){
-		aux[idx].x = A[idx].x * cosf(m*sinf(2*PI*fpm*T[idx])) - A[idx].y * sinf(m*sinf(2*PI*fpm*T[idx]));
-		aux[idx].y = A[idx].x * sinf(m*sinf(2*PI*fpm*T[idx])) + A[idx].y * cosf(m*sinf(2*PI*fpm*T[idx]));
+		aux[idx] = A[idx] * CpxExp(m*sinf(2*PI*fpm*T[idx]));
 	}
 	if (idx < SIZE){
-		A[idx].x = aux[idx].x;
-		A[idx].y = aux[idx].y;
-	}
-
-	return ;
+		A[idx] = aux[idx];}
+		
+		return ;
 }
 
 
-/** XXXXXXXXXXXXXXXXXXXXX to an electric field after one round trip. */
+/** Add self-phase modulation to an electric field after one round trip. */
 __global__ void SelfPhaseModulation(complex_t *A, complex_t *aux, real_t gamma, real_t L, real_t alphaS, int SIZE)
 {
 	
@@ -278,14 +421,12 @@ __global__ void SelfPhaseModulation(complex_t *A, complex_t *aux, real_t gamma, 
 	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	if (idx < SIZE){
-		aux[idx].x = A[idx].x*cosf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y)) + A[idx].y*sinf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y));
-		aux[idx].y = A[idx].y*cosf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y)) - A[idx].x*sinf(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y));
+		aux[idx] = A[idx] * CpxExp(gamma*L*(A[idx].x*A[idx].x+A[idx].y*A[idx].y));
 	}
 	if (idx < SIZE){
-		A[idx].x = aux[idx].x * att;
-		A[idx].y = aux[idx].y * att;
+		A[idx] = aux[idx] * att;
 	}
-
+	
 	return ;
 }
 

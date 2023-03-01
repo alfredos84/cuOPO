@@ -2,7 +2,7 @@
 // * This file contains two functions that save files in .dat extension
 // * 1 - SaveFileVectorReal()    : save real vectors
 // * 2 - SaveFileVectorComplex() : save complex vectors
- 
+
 // Inputs:
 // - Vector   : vector to save
 // - N        : vector size
@@ -54,7 +54,7 @@ void SaveFileVectorComplex (T *Vector, const int N, std::string Filename){
 	myfile.close();
 	myfile.open(Filename+extension_i);
 	for (int iy = 0; iy < N; iy++)
-	    myfile << std::setprecision(20) << Vector[iy].y << "\n";
+		myfile << std::setprecision(20) << Vector[iy].y << "\n";
 	myfile.close();
 }
 

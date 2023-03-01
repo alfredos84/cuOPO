@@ -45,8 +45,8 @@ int main(int argc, char *argv[]){
 	time(&current_time);
 	std::cout << "Date: " << ctime(&current_time) << std::endl;
 	real_t iStart = seconds();
-
-
+	
+	
 	#ifdef CW_OPO
 	std::cout << "Regime: continuous wave" << std::endl;
 	#endif
@@ -78,37 +78,37 @@ int main(int argc, char *argv[]){
 	
 	// Set parameters and constants //
 	int N_rt         = atoi(argv[8]); // number of simulation round trips
-
+	
 	// Grids, crystal and cavity parameters //
 	real_t lp        = atof(argv[15])*1e-3;  // pump wavelength   [μm]
 	real_t ls        = 2*lp;           // signal wavelength [μm]
 	real_t li        = lp*ls/(ls-lp);  // idler wavelength  [μm]
-
+	
 	real_t deff      = 14.77e-6;       // effective second-order susceptibility [um/V]
 	real_t Temp      = atof(argv[16]); // crystal temperature [ºC]
 	real_t Lambda    = atof(argv[17]); // grating period for QPM [μm]  
 	real_t Lcr       = 5e3;            // crystal length [um]
-		
+	
 	real_t np        = n_PPLN(lp, Temp);         // pump ref. index
 	real_t vp        = group_vel_PPLN(lp, Temp); // pump group velocity [μm/ps]
 	real_t b2p       = gvd_PPLN(lp, Temp);       // pump GVD [ps²/μm] 
 	real_t b3p       = 0.*TOD_PPLN(lp, Temp);    // pump TOD [ps³/μm]	
 	real_t kp        = 2*PI*deff/(np*lp);        // pump kappa [1/V]
-	real_t alpha_crp = 0.002e-4;                 // pump linear absorption [1/μm]
+	real_t alpha_crp = 0.025e-4;                 // pump linear absorption [1/μm]
 	
 	real_t ns        = n_PPLN(ls, Temp);         // signal ref. index
 	real_t vs        = group_vel_PPLN(ls, Temp); // signal group velocity [μm/ps]
 	real_t b2s       = gvd_PPLN(ls, Temp);       // signal GVD [ps²/μm] 
 	real_t b3s       = 0.*TOD_PPLN(ls, Temp);    // signal TOD [ps³/μm]		
 	real_t ks        = 2*PI*deff/(ns*ls);        // signal kappa [1/V]
-	real_t alpha_crs = 0.025e-4;                 // signal linear absorption [1/μm]
-
+	real_t alpha_crs = 0.002e-4;                 // signal linear absorption [1/μm]
+	
 	real_t ni        = n_PPLN(li, Temp);         // idler ref. index
 	real_t vi        = group_vel_PPLN(li, Temp); // idler group velocity [μm/ps]
 	real_t b2i       = gvd_PPLN(li, Temp);       // idler GVD [ps²/μm]
 	real_t b3i       = 0.*TOD_PPLN(li, Temp);    // idler TOD [ps³/μm]	
 	real_t ki        = 2*PI*deff/(ni*li);        // idler kappa [1/V]
-	real_t alpha_cri = 0.025e-4;                 // idler linear absorption [1/μm]
+	real_t alpha_cri = 0.002e-4;                 // idler linear absorption [1/μm]
 	
 	real_t dk        = 2*PI*( np/lp-ns/ls-ni/li-1/Lambda ); // mismatch factor
 	real_t dkp       = 1/vp-1/vs;                           // group velocity mismatch	
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]){
 	real_t FSR       = 1/t_rt;	                          // free-spectral range
 	real_t finesse   = 2*PI/(1-Rs);                         // cavity finesse
 	real_t lw        = FSR/finesse*1e6;                     // cavity Linewidth [MHz]
- 	real_t delta     = atof(argv[6]);                       // cavity detuning [rad] 
+	real_t delta     = atof(argv[6]);                       // cavity detuning [rad] 
 	real_t epsilon   = atof(argv[7])*0.01;                  // dispersion compensation index
 	real_t GDD       = -epsilon*b2s*Lcr;                    // GDD [ps²]
 	real_t TODscomp  = -0.01*atof(argv[13])*b3s*Lcr;        // TOD compensation [ps³]
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]){
 	// Time vector T for one round trip
 	real_t *T = (real_t*) malloc(sizeof(real_t) * SIZE);
 	linspace( T, SIZE, -0.5*t_rt, 0.5*t_rt);
-
+	
 	// Time vector Tp for full simulation
 	real_t *Tp = (real_t*) malloc(sizeof(real_t) * SIZEL);
 	linspace( Tp, SIZEL, -0.5*T_width, 0.5*T_width);
@@ -174,8 +174,8 @@ int main(int argc, char *argv[]){
 	real_t dFp  = 1/T_width;
 	real_t *Fp = (real_t*) malloc(sizeof(real_t) * SIZEL);
 	linspace( Fp, SIZEL, -0.5*SIZEL*dFp, +0.5*SIZEL*dFp);
-// 	inic_vector_F(Fp, SIZEL, dFp);
-
+	// 	inic_vector_F(Fp, SIZEL, dFp);
+	
 	
 	// Frequency and angular frequency vectors f and Ω
 	real_t *F = (real_t*) malloc(sizeof(real_t) * SIZE);
@@ -185,9 +185,9 @@ int main(int argc, char *argv[]){
 	for (int i=0; i<SIZE; i++)
 		w[i] = 2*PI*w[i]; // angular frequency for one round trip [2*pi*THz]
 		
-			
-	// Define memory size for complex host vectors
-	int nBytes   = sizeof(complex_t)*SIZE;
+		
+		// Define memory size for complex host vectors
+		int nBytes   = sizeof(complex_t)*SIZE;
 	// Define input pump parameters
 	real_t waist = 55;             // beam waist radius [um]
 	real_t spot  = PI*waist*waist; // spot area [μm²]
@@ -241,8 +241,8 @@ int main(int argc, char *argv[]){
 	complex_t *Ai = (complex_t*)malloc(nBytes);
 	NoiseGeneratorCPU ( Ai, SIZE );
 	#endif
-
-
+	
+	
 	// Intracavy phase modulator
 	bool using_phase_modulator = atoi(argv[10]);
 	real_t mod_depth, fpm, df;
@@ -350,16 +350,16 @@ int main(int argc, char *argv[]){
 		std::cout << "Power                   = " << Power << " W" << std::endl;
 		std::cout << "Times above the thres.  = " << Nth << std::endl;
 		if(using_phase_modulator){
-		std::cout << "Using a phase modulator:" << std::endl;
-		std::cout << "Mod. depth (\u03B2)          = " << atof(argv[11]) << "\u03C0 rad = " << mod_depth << " rad" << std::endl;
-		std::cout << "Freq. detuning (\u03B4f)     = " << df*1e6 << " MHz" << std::endl;
-		std::cout << "Mod. frequency(fm)      = " << fpm*1e3 << " GHz" << std::endl;
-		std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
-		std::cout << "(N,\u03B2,\u03B4f,\u03B5) = ( " << Nth << ", " << atof(argv[11]) << ", "  << std::setprecision(4) << df*1e6 << ", " << epsilon << " )\n\n" << std::endl;			
+			std::cout << "Using a phase modulator:" << std::endl;
+			std::cout << "Mod. depth (\u03B2)          = " << atof(argv[11]) << "\u03C0 rad = " << mod_depth << " rad" << std::endl;
+			std::cout << "Freq. detuning (\u03B4f)     = " << df*1e6 << " MHz" << std::endl;
+			std::cout << "Mod. frequency(fm)      = " << fpm*1e3 << " GHz" << std::endl;
+			std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
+			std::cout << "(N,\u03B2,\u03B4f,\u03B5) = ( " << Nth << ", " << atof(argv[11]) << ", "  << std::setprecision(4) << df*1e6 << ", " << epsilon << " )\n\n" << std::endl;			
 		}
 		else{std::cout << "No phase modulator" << std::endl;
-		std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
-		std::cout << "( N, \u03B2, \u03B4f, \u03B5 ) = ( " << Nth << ", 0, 0, " << std::setprecision(2) << epsilon << " )\n\n" << std::endl;
+			std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
+			std::cout << "( N, \u03B2, \u03B4f, \u03B5 ) = ( " << Nth << ", 0, 0, " << std::setprecision(2) << epsilon << " )\n\n" << std::endl;
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -374,15 +374,15 @@ int main(int argc, char *argv[]){
 	int dimx = 1 << 7;
 	dim3 block(dimx); dim3 grid((SIZE + block.x - 1) / block.x);
 	
-
+	
 	std::cout << "Setting constants and vectors in device..." << std::endl;
 	real_t *w_gpu; // angular frequency 
 	CHECK(cudaMalloc((void **)&w_gpu, sizeof(real_t) * SIZE ));
-
+	
 	real_t *T_gpu; // time for a single round trip
 	CHECK(cudaMalloc((void **)&T_gpu, sizeof(real_t) * SIZE ));    
 	CHECK(cudaMemcpy(T_gpu, T, sizeof(real_t)*SIZE, cudaMemcpyHostToDevice));    
-    
+	
 	
 	complex_t *Ap_gpu, *Ap_in_gpu, *Ap_total_gpu, *Apw_gpu, *As_gpu, *As_total_gpu, *Asw_gpu;
 	CHECK(cudaMalloc((void **)&As_gpu, nBytes ));
@@ -400,7 +400,7 @@ int main(int argc, char *argv[]){
 	CHECK(cudaMalloc((void **)&Ap_total_gpu, sizeof(complex_t) * SIZEL ));
 	CHECK(cudaMalloc((void **)&Asw_gpu, nBytes ));
 	CHECK(cudaMalloc((void **)&Apw_gpu, nBytes ));
-
+	
 	CHECK(cudaMemcpy(As_gpu, As, nBytes, cudaMemcpyHostToDevice));
 	#ifdef CW_OPO
 	CHECK(cudaMemcpy(Ap_in_gpu, Ap_in, nBytes, cudaMemcpyHostToDevice));	
@@ -411,8 +411,8 @@ int main(int argc, char *argv[]){
 	
 	CHECK(cudaMemcpy(w_gpu, w, sizeof(real_t) * SIZE , cudaMemcpyHostToDevice));
 	
-    
-	// RK4 (kx) and auxiliary (aux) GPU vectors
+	
+	// RK4 (kx) and auxiliary (aux) GPU vectors 
 	complex_t *k1p_gpu, *k2p_gpu, *k3p_gpu, *k4p_gpu, *k1s_gpu, *k2s_gpu, *k3s_gpu, *k4s_gpu;
 	CHECK(cudaMalloc((void **)&k1p_gpu, nBytes ));	CHECK(cudaMalloc((void **)&k2p_gpu, nBytes ));
 	CHECK(cudaMalloc((void **)&k3p_gpu, nBytes ));	CHECK(cudaMalloc((void **)&k4p_gpu, nBytes ));
@@ -433,9 +433,9 @@ int main(int argc, char *argv[]){
 	CHECK(cudaMalloc((void **)&Ai_gpu, nBytes ));
 	CHECK(cudaMalloc((void **)&Ai_total_gpu, sizeof(complex_t) * SIZEL ));
 	CHECK(cudaMalloc((void **)&Aiw_gpu, nBytes ));
-
+	
 	CHECK(cudaMemcpy(Ai_gpu, Ai, nBytes, cudaMemcpyHostToDevice));	
-
+	
 	complex_t *k1i_gpu, *k2i_gpu, *k3i_gpu, *k4i_gpu, *auxi_gpu;
 	CHECK(cudaMalloc((void **)&k1i_gpu, nBytes ));	CHECK(cudaMalloc((void **)&k2i_gpu, nBytes ));
 	CHECK(cudaMalloc((void **)&k3i_gpu, nBytes ));	CHECK(cudaMalloc((void **)&k4i_gpu, nBytes ));
@@ -465,7 +465,7 @@ int main(int argc, char *argv[]){
 	for (int nn = 0; nn < N_rt; nn++){
 		if( nn%250 == 0 or nn == N_rt-1 )
 			std::cout << "#round trip: " << nn << std::endl;
-
+		
 		#ifdef CW_OPO
 		// update the input pump in each round trip
 		CHECK(cudaMemcpy( Ap_gpu, Ap_in_gpu, nBytes, cudaMemcpyDeviceToDevice) );
@@ -487,7 +487,7 @@ int main(int argc, char *argv[]){
 			NoiseGeneratorCPU ( As, SIZE );
 			CHECK(cudaMemcpy(As_gpu, As, nBytes, cudaMemcpyHostToDevice));			
 		}
-				
+		
 		#ifdef THREE_EQS // Single pass for coupled wave equations (2 or 3)
 		EvolutionInCrystal( w_gpu, grid, block, Ap_gpu, As_gpu, Ai_gpu, Apw_gpu, Asw_gpu, Aiw_gpu, k1p_gpu, k1s_gpu, k1i_gpu, k2p_gpu, k2s_gpu, k2i_gpu, k3p_gpu, k3s_gpu, k3i_gpu, k4p_gpu, k4s_gpu, k4i_gpu, auxp_gpu, auxs_gpu, auxi_gpu, lp, ls, li, vp, vs, vi, b2p, b2s, b2i, b3p, b3s, b3i, dk, alpha_crp, alpha_crs, alpha_cri, kp, ks, ki, dz, steps_z, SIZE );
 		#else
@@ -560,14 +560,14 @@ int main(int argc, char *argv[]){
 		}
 		#endif
 		#ifdef NS_OPO	// save the simulation in the NS regime
-			SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, nn, extra_win, N_rt, SIZE ); // saves signal
-			CHECK(cudaDeviceSynchronize());
-			SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, nn, extra_win, N_rt, SIZE ); // saves pump
-			CHECK(cudaDeviceSynchronize());
-			#ifdef THREE_EQS
-			SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, nn, extra_win, N_rt, SIZE ); // saves idler
-			CHECK(cudaDeviceSynchronize());
-			#endif
+		SaveRoundTrip<<<grid,block>>>(Ap_total_gpu, Ap_gpu, nn, extra_win, N_rt, SIZE ); // saves signal
+		CHECK(cudaDeviceSynchronize());
+		SaveRoundTrip<<<grid,block>>>(As_total_gpu, As_gpu, nn, extra_win, N_rt, SIZE ); // saves pump
+		CHECK(cudaDeviceSynchronize());
+		#ifdef THREE_EQS
+		SaveRoundTrip<<<grid,block>>>(Ai_total_gpu, Ai_gpu, nn, extra_win, N_rt, SIZE ); // saves idler
+		CHECK(cudaDeviceSynchronize());
+		#endif
 		#endif
 	}
 	
@@ -579,12 +579,13 @@ int main(int argc, char *argv[]){
 	////////////////////////////////////////////////////////////////////////////////////////	
 	// Saving results in .dat files using the function SaveFileVectorComplex() //
 	
+	
 	// Decide whether or not save these vectors in the cuOPO.sh file
 	short unsigned int save_vectors = atoi(argv[1]);
 	if (save_vectors == 1){
 		std::cout << "\nSaving time and frequency vectors...\n" << std::endl;
 		Filename = "Tp"; SaveFileVectorReal (Tp, SIZEL, Filename+Extension);
- 		Filename = "freq"; SaveFileVectorReal (Fp, SIZEL, Filename+Extension);
+		Filename = "freq"; SaveFileVectorReal (Fp, SIZEL, Filename+Extension);
 		Filename = "T"; SaveFileVectorReal (T, SIZE, Filename+Extension);
 	}
 	else{ std::cout << "\nTime and frequency were previuosly save...\n" << std::endl;
@@ -597,11 +598,11 @@ int main(int argc, char *argv[]){
 	// Copy GPU -> CPU and save outputs
 	CHECK(cudaMemcpy(As_total, As_total_gpu, sizeof(complex_t) * SIZEL, cudaMemcpyDeviceToHost));
 	CHECK(cudaMemcpy(Ap_total, Ap_total_gpu, sizeof(complex_t) * SIZEL, cudaMemcpyDeviceToHost));
-
+	
 	// Save data
 	Filename = "signal_output";	SaveFileVectorComplex ( As_total, SIZEL, Filename );
 	Filename = "pump_output";	SaveFileVectorComplex ( Ap_total, SIZEL, Filename );
-
+	
 	#ifdef THREE_EQS
 	complex_t *Ai_total   = (complex_t*)malloc(sizeof(complex_t) * SIZEL);
 	CHECK(cudaMemcpy(Ai_total, Ai_total_gpu, sizeof(complex_t) * SIZEL, cudaMemcpyDeviceToHost));
@@ -618,9 +619,9 @@ int main(int argc, char *argv[]){
 	
 	free(Tp); free(T); free(Fp); free(w); free(F); free(As);
 	free(As_total); free(Ap_in); free(Ap_total);
-
+	
 	CHECK(cudaFree(As_gpu)); 		CHECK(cudaFree(Ap_gpu));
-	CHECK(cudaFree(As_total_gpu));	        CHECK(cudaFree(Ap_total_gpu));
+	CHECK(cudaFree(As_total_gpu));	CHECK(cudaFree(Ap_total_gpu));
 	CHECK(cudaFree(Ap_in_gpu));	
 	CHECK(cudaFree(T_gpu)); 		CHECK(cudaFree(w_gpu));
 	CHECK(cudaFree(k1p_gpu));		CHECK(cudaFree(k2p_gpu));
@@ -628,16 +629,16 @@ int main(int argc, char *argv[]){
 	CHECK(cudaFree(k1s_gpu));        	CHECK(cudaFree(k2s_gpu));
 	CHECK(cudaFree(k3s_gpu));        	CHECK(cudaFree(k4s_gpu));	
 	CHECK(cudaFree(auxs_gpu));       	CHECK(cudaFree(auxp_gpu));
-
+	
 	#ifdef THREE_EQS
-		free(Ai); free(Ai_total);
-		
-		CHECK(cudaFree(Ai_gpu));      CHECK(cudaFree(Ai_total_gpu));
-		CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
-		CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
-		CHECK(cudaFree(auxi_gpu));
+	free(Ai); free(Ai_total);
+	
+	CHECK(cudaFree(Ai_gpu));	CHECK(cudaFree(Ai_total_gpu));
+	CHECK(cudaFree(k1i_gpu));     CHECK(cudaFree(k2i_gpu));
+	CHECK(cudaFree(k3i_gpu));     CHECK(cudaFree(k4i_gpu));
+	CHECK(cudaFree(auxi_gpu));
 	#endif
-
+	
 	// Destroy CUFFT context and reset the GPU
 	cufftDestroy(plan1D); 	cudaDeviceReset();    
 	
@@ -652,9 +653,67 @@ int main(int argc, char *argv[]){
 	real_t iElaps = seconds() - iStart;
 	if(iElaps>60){std::cout << "\n\n...time elapsed " <<  iElaps/60.0 << " min\n\n " << std::endl;}
 	else{std::cout << "\n\n...time elapsed " <<  iElaps << " seconds\n\n " << std::endl;}
-
+	
 	time(&current_time);
 	std::cout << ctime(&current_time) << std::endl;
 	
 	return 0;
 }
+
+
+/**
+ * Letter   Description  Escape-Sequence
+ * -------------------------------------
+ * A        Alpha        \u0391
+ * B        Beta         \u0392
+ * Γ        Gamma        \u0393
+ * Δ        Delta        \u0394
+ * Ε        Epsilon      \u0395
+ * Ζ        Zeta         \u0396
+ * Η        Eta          \u0397
+ * Θ        Theta        \u0398
+ * Ι        Iota         \u0399
+ * Κ        Kappa        \u039A
+ * Λ        Lambda       \u039B
+ * Μ        Mu           \u039C
+ * Ν        Nu           \u039D
+ * Ξ        Xi           \u039E
+ * Ο        Omicron      \u039F
+ * Π        Pi           \u03A0
+ * Ρ        Rho          \u03A1
+ * Σ        Sigma        \u03A3
+ * Τ        Tau          \u03A4
+ * Υ        Upsilon      \u03A5
+ * Φ        Phi          \u03A6
+ * Χ        Chi          \u03A7
+ * Ψ        Psi          \u03A8
+ * Ω        Omega        \u03A9 
+ * -------------------------------------
+ * Letter   Description  Escape-Sequence
+ * -------------------------------------
+ * α        Alpha        \u03B1
+ * β        Beta         \u03B2
+ * γ        Gamma        \u03B3
+ * δ        Delta        \u03B4
+ * ε        Epsilon      \u03B5
+ * ζ        Zeta         \u03B6
+ * η        Eta          \u03B7
+ * θ        Theta        \u03B8
+ * ι        Iota         \u03B9
+ * κ        Kappa        \u03BA
+ * λ        Lambda       \u03BB
+ * μ        Mu           \u03BC
+ * ν        Nu           \u03BD
+ * ξ        Xi           \u03BE
+ * ο        Omicron      \u03BF
+ * π        Pi           \u03C0
+ * ρ        Rho          \u03C1
+ * σ        Sigma        \u03C3
+ * τ        Tau          \u03C4
+ * υ        Upsilon      \u03C5
+ * φ        Phi          \u03C6
+ * χ        Chi          \u03C7
+ * ψ        Psi          \u03C8
+ * ω        Omega        \u03C9
+ * -------------------------------------
+ */

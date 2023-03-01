@@ -50,16 +50,14 @@ using real_t = float;
 // save in dAp, dAs the evolved electric fields
 __global__ void dAdz( complex_t *dAp, complex_t *dAs, complex_t *Ap, complex_t *As, real_t lp, real_t ls, real_t kp, real_t ks, real_t dk, real_t z, int SIZE )
 {
-    
+	complex_t Im; Im.x = 0; Im.y = 1;
+	
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
+	
 	if (idx < SIZE){
-		dAp[idx].x = -kp*( As[idx].x*As[idx].y + As[idx].y*As[idx].x )*cosf(dk*z) + kp*( As[idx].x*As[idx].x - As[idx].y*As[idx].y )*sinf(dk*z) ;
-		dAp[idx].y = +kp*( As[idx].x*As[idx].x - As[idx].y*As[idx].y )*cosf(dk*z) + kp*( As[idx].x*As[idx].y + As[idx].y*As[idx].x )*sinf(dk*z) ;
-		
-		dAs[idx].x = -ks*( Ap[idx].x*As[idx].x + Ap[idx].y*As[idx].y )*sinf(dk*z) - ks*( Ap[idx].y*As[idx].x - Ap[idx].x*As[idx].y )*cosf(dk*z) ;
-		dAs[idx].y = +ks*( Ap[idx].x*As[idx].x + Ap[idx].y*As[idx].y )*cosf(dk*z) - ks*( Ap[idx].y*As[idx].x - Ap[idx].x*As[idx].y )*sinf(dk*z) ;
-	}
+		dAp[idx]  = Im * kp * As[idx] * As[idx] * CpxExp(+dk*z) ;
+		dAs[idx]  = Im * ks * Ap[idx] * CpxConj(As[idx]) * CpxExp(-dk*z);
+	}	
 	
 	return ;
 }
@@ -81,10 +79,8 @@ __global__ void LinealCombination( complex_t *auxp, complex_t *auxs, complex_t *
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if (idx < SIZE){
-		auxp[idx].x = Ap[idx].x + kp[idx].x * s;
-		auxp[idx].y = Ap[idx].y + kp[idx].y * s;
-		auxs[idx].x = As[idx].x + ks[idx].x * s;
-		auxs[idx].y = As[idx].y + ks[idx].y * s;
+		auxp[idx] = Ap[idx] + kp[idx] * s;
+		auxs[idx] = As[idx] + ks[idx] * s;
 	}
 	
 	return ;
@@ -105,10 +101,8 @@ __global__ void rk4(complex_t *Ap, complex_t *As,complex_t *k1p, complex_t *k1s,
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if (idx < SIZE){
-		Ap[idx].x = Ap[idx].x + (k1p[idx].x + 2*k2p[idx].x + 2*k3p[idx].x + k4p[idx].x) * dz / 6;
-		Ap[idx].y = Ap[idx].y + (k1p[idx].y + 2*k2p[idx].y + 2*k3p[idx].y + k4p[idx].y) * dz / 6;
-		As[idx].x = As[idx].x + (k1s[idx].x + 2*k2s[idx].x + 2*k3s[idx].x + k4s[idx].x) * dz / 6;
-		As[idx].y = As[idx].y + (k1s[idx].y + 2*k2s[idx].y + 2*k3s[idx].y + k4s[idx].y) * dz / 6;
+		Ap[idx] = Ap[idx] + (k1p[idx] + 2*k2p[idx] + 2*k3p[idx] + k4p[idx]) * dz / 6;
+		As[idx] = As[idx] + (k1s[idx] + 2*k2s[idx] + 2*k3s[idx] + k4s[idx]) * dz / 6;
 	}
 	
 	return ;
@@ -116,7 +110,7 @@ __global__ void rk4(complex_t *Ap, complex_t *As,complex_t *k1p, complex_t *k1s,
 
 
 /** Computes the linear part: Ax = Ax.exp(i.f(Ω)*z), where f(Ω) is a frequency dependant functions
- including the group velocity and the group velocity dispersion parameters. */
+ * including the group velocity and the group velocity dispersion parameters. */
 // INPUTS 
 //     auxp, auxs: auxiliary vectors
 //      Apw,  Asw: electric fields in frequency domain
@@ -137,17 +131,13 @@ __global__ void LinearOperator(complex_t *auxp, complex_t *auxs, complex_t *Apw,
 	real_t attenp = expf(-0.5*alphap*z);
 	real_t attens = expf(-0.5*alphas*z);
 	
-	if (idx < SIZE){		
-		auxp[idx].x = Apw[idx].x * cosf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6)) - Apw[idx].y * sinf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
-		auxp[idx].y = Apw[idx].y * cosf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6)) + Apw[idx].x * sinf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
-		auxs[idx].x = Asw[idx].x * cosf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6)) - Asw[idx].y * sinf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
-		auxs[idx].y = Asw[idx].y * cosf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6)) + Asw[idx].x * sinf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
+	if (idx < SIZE){
+		auxp[idx] = Apw[idx] * CpxExp(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));		
+		auxs[idx] = Asw[idx] * CpxExp(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
 	}
 	if (idx < SIZE){
-		Apw[idx].x = auxp[idx].x * attenp;
-		Apw[idx].y = auxp[idx].y * attenp;
-		Asw[idx].x = auxs[idx].x * attens;
-		Asw[idx].y = auxs[idx].y * attens;
+		Apw[idx] = auxp[idx] * attenp;
+		Asw[idx] = auxs[idx] * attens;
 	}
 	
 	return ;

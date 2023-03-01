@@ -54,14 +54,9 @@ __global__ void dAdz( complex_t *dAp, complex_t *dAs,  complex_t *dAi, complex_t
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if (idx < SIZE){
-		dAp[idx].x = -kp*( As[idx].x*Ai[idx].y + As[idx].y*Ai[idx].x )*cosf(dk*z) + kp*( As[idx].x*Ai[idx].x - As[idx].y*Ai[idx].y )*sinf(dk*z) ;
-		dAp[idx].y = +kp*( As[idx].x*Ai[idx].x - As[idx].y*Ai[idx].y )*cosf(dk*z) + kp*( As[idx].x*Ai[idx].y + As[idx].y*Ai[idx].x )*sinf(dk*z) ;
-		
-		dAs[idx].x = -ks*( Ap[idx].x*Ai[idx].x + Ap[idx].y*Ai[idx].y )*sinf(dk*z) - ks*( Ap[idx].y*Ai[idx].x - Ap[idx].x*Ai[idx].y )*cosf(dk*z) ;
-		dAs[idx].y = +ks*( Ap[idx].x*Ai[idx].x + Ap[idx].y*Ai[idx].y )*cosf(dk*z) - ks*( Ap[idx].y*Ai[idx].x - Ap[idx].x*Ai[idx].y )*sinf(dk*z) ;
-		
-		dAi[idx].x = -ki*( Ap[idx].x*As[idx].x + Ap[idx].y*As[idx].y )*sinf(dk*z) - ki*( Ap[idx].y*As[idx].x - Ap[idx].x*As[idx].y )*cosf(dk*z) ;
-		dAi[idx].y = +ki*( Ap[idx].x*As[idx].x + Ap[idx].y*As[idx].y )*cosf(dk*z) - ki*( Ap[idx].y*As[idx].x - Ap[idx].x*As[idx].y )*sinf(dk*z) ;		
+		dAp[idx]  = Im * kp * As[idx] * As[idx] * CpxExp(-dk*z) ;
+		dAs[idx]  = Im * ks * Ap[idx] * CpxConj(Ai[idx]) * CpxExp(+dk*z);
+		dAi[idx]  = Im * ki * Ap[idx] * CpxConj(As[idx]) * CpxExp(+dk*z);
 	}
 	
 	return ;
@@ -84,12 +79,9 @@ __global__ void LinealCombination( complex_t *auxp, complex_t *auxs, complex_t *
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if (idx < SIZE){
-		auxp[idx].x = Ap[idx].x + kp[idx].x * s;
-		auxp[idx].y = Ap[idx].y + kp[idx].y * s;
-		auxs[idx].x = As[idx].x + ks[idx].x * s;
-		auxs[idx].y = As[idx].y + ks[idx].y * s;
-		auxi[idx].x = Ai[idx].x + ki[idx].x * s;
-		auxi[idx].y = Ai[idx].y + ki[idx].y * s;		
+		auxp[idx] = Ap[idx] + kp[idx] * s;
+		auxs[idx] = As[idx] + ks[idx] * s;
+		auxi[idx] = Ai[idx] + ki[idx] * s;
 	}
 	
 	return ;
@@ -110,12 +102,9 @@ __global__ void rk4(complex_t *Ap, complex_t *As,  complex_t *Ai, complex_t *k1p
 	unsigned long int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	if (idx < SIZE){
-		Ap[idx].x = Ap[idx].x + (k1p[idx].x + 2*k2p[idx].x + 2*k3p[idx].x + k4p[idx].x) * dz / 6;
-		Ap[idx].y = Ap[idx].y + (k1p[idx].y + 2*k2p[idx].y + 2*k3p[idx].y + k4p[idx].y) * dz / 6;
-		As[idx].x = As[idx].x + (k1s[idx].x + 2*k2s[idx].x + 2*k3s[idx].x + k4s[idx].x) * dz / 6;
-		As[idx].y = As[idx].y + (k1s[idx].y + 2*k2s[idx].y + 2*k3s[idx].y + k4s[idx].y) * dz / 6;
-		Ai[idx].x = Ai[idx].x + (k1i[idx].x + 2*k2i[idx].x + 2*k3i[idx].x + k4i[idx].x) * dz / 6;
-		Ai[idx].y = Ai[idx].y + (k1i[idx].y + 2*k2i[idx].y + 2*k3i[idx].y + k4i[idx].y) * dz / 6;		
+		Ap[idx] = Ap[idx] + (k1p[idx] + 2*k2p[idx] + 2*k3p[idx] + k4p[idx]) * dz / 6;
+		As[idx] = As[idx] + (k1s[idx] + 2*k2s[idx] + 2*k3s[idx] + k4s[idx]) * dz / 6;
+		Ai[idx] = Ai[idx] + (k1i[idx] + 2*k2i[idx] + 2*k3i[idx] + k4i[idx]) * dz / 6;
 	}
 	
 	return ;
@@ -123,7 +112,7 @@ __global__ void rk4(complex_t *Ap, complex_t *As,  complex_t *Ai, complex_t *k1p
 
 
 /** Computes the linear part: Ax = Ax.exp(i.f(Ω)*z), where f(Ω) is a frequency dependant functions
- including the group velocity and the group velocity dispersion parameters. */
+ * including the group velocity and the group velocity dispersion parameters. */
 // INPUTS 
 //     auxp,  auxs,  auxi : auxiliary vectors
 //      Apw,   Asw,   Aiw : electric fields in frequency domain
@@ -146,20 +135,14 @@ __global__ void LinearOperator(complex_t *auxp, complex_t *auxs, complex_t *auxi
 	real_t atteni = expf(-0.5*alphai*z);
 	
 	if (idx < SIZE){		
-		auxp[idx].x = Apw[idx].x * cosf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6)) - Apw[idx].y * sinf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
-		auxp[idx].y = Apw[idx].y * cosf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6)) + Apw[idx].x * sinf(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
-		auxs[idx].x = Asw[idx].x * cosf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6)) - Asw[idx].y * sinf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
-		auxs[idx].y = Asw[idx].y * cosf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3i/6)) + Asw[idx].x * sinf(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
-		auxi[idx].x = Aiw[idx].x * cosf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6)) - Aiw[idx].y * sinf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6));
-		auxi[idx].y = Aiw[idx].y * cosf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6)) + Aiw[idx].x * sinf(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6));
+		auxp[idx] = Apw[idx] * CpxExp(z*w[idx]*((1/vs-1/vp)+0.5*w[idx]*b2p + w[idx]*w[idx]*b3p/6));
+		auxs[idx] = Asw[idx] * CpxExp(z*w[idx]*((1/vs-1/vs)+0.5*w[idx]*b2s + w[idx]*w[idx]*b3s/6));
+		auxi[idx] = Aiw[idx] * CpxExp(z*w[idx]*((1/vs-1/vi)+0.5*w[idx]*b2i + w[idx]*w[idx]*b3i/6));
 	}
 	if (idx < SIZE){
-		Apw[idx].x = auxp[idx].x * attenp;
-		Apw[idx].y = auxp[idx].y * attenp;
-		Asw[idx].x = auxs[idx].x * attens;
-		Asw[idx].y = auxs[idx].y * attens;
-		Aiw[idx].x = auxi[idx].x * atteni;
-		Aiw[idx].y = auxi[idx].y * atteni;
+		Apw[idx] = auxp[idx] * attenp;
+		Asw[idx] = auxs[idx] * attens;
+		Aiw[idx] = auxi[idx] * atteni;
 	}
 	
 	return ;
@@ -205,7 +188,7 @@ void EvolutionInCrystal( real_t *w_ext_gpu, dim3 grid, dim3 block, complex_t *Ap
 		// A = A+(k1+2*k2+2*k3+k4)*dz/6
 		rk4<<<grid,block>>>( Ap, As, Ai, k1p_gpu, k1s_gpu, k1i_gpu, k2p_gpu, k2s_gpu, k2i_gpu, k3p_gpu, k3s_gpu, k3i_gpu, k4p_gpu, k4s_gpu, k4i_gpu, dz/2, SIZE );
 		CHECK(cudaDeviceSynchronize());
-
+		
 		// Linear operator for dz
 		cufftExecC2C(plan1D, (complex_t *)As, (complex_t *)Asw_gpu, CUFFT_INVERSE);
 		CHECK(cudaDeviceSynchronize());

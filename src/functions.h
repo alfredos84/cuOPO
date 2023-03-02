@@ -53,7 +53,8 @@ __host__ __device__ inline complex_t  operator+(const real_t &a, const complex_t
 }
 
 
-__host__ __device__ inline complex_t  operator+(const complex_t &b, const real_t &a) {
+__host__ __device__ inline complex_t  operator+(const complex_t &b, const real_t &a)
+{
 	
 	complex_t c;    
 	c.x = a   + b.x;
@@ -63,7 +64,8 @@ __host__ __device__ inline complex_t  operator+(const complex_t &b, const real_t
 }
 
 
-__host__ __device__ inline complex_t  operator+(const complex_t &a, const complex_t &b) {
+__host__ __device__ inline complex_t  operator+(const complex_t &a, const complex_t &b) 
+{
 	
 	complex_t c;    
 	c.x = a.x + b.x;
@@ -73,7 +75,8 @@ __host__ __device__ inline complex_t  operator+(const complex_t &a, const comple
 }
 
 
-__host__ __device__ inline complex_t  operator-(const real_t &a, const complex_t &b) {
+__host__ __device__ inline complex_t  operator-(const real_t &a, const complex_t &b)
+{
 	
 	complex_t c;    
 	c.x = a   - b.x;
@@ -83,7 +86,8 @@ __host__ __device__ inline complex_t  operator-(const real_t &a, const complex_t
 }
 
 
-__host__ __device__ inline complex_t  operator-(const complex_t &b, const real_t &a) {
+__host__ __device__ inline complex_t  operator-(const complex_t &b, const real_t &a) 
+{
 	
 	complex_t c;    
 	c.x = a   - b.x;
@@ -93,7 +97,8 @@ __host__ __device__ inline complex_t  operator-(const complex_t &b, const real_t
 }
 
 
-__host__ __device__ inline complex_t  operator-(const complex_t &a, const complex_t &b) {
+__host__ __device__ inline complex_t  operator-(const complex_t &a, const complex_t &b) 
+{
 	
 	complex_t c;    
 	c.x = a.x - b.x;
@@ -103,7 +108,8 @@ __host__ __device__ inline complex_t  operator-(const complex_t &a, const comple
 }
 
 
-__host__ __device__ inline complex_t  operator*(const real_t &a, const complex_t &b) {
+__host__ __device__ inline complex_t  operator*(const real_t &a, const complex_t &b)
+{
 	
 	complex_t c;    
 	c.x = a * b.x ;
@@ -113,7 +119,8 @@ __host__ __device__ inline complex_t  operator*(const real_t &a, const complex_t
 }
 
 
-__host__ __device__ inline complex_t  operator*(const complex_t &b, const real_t &a) {
+__host__ __device__ inline complex_t  operator*(const complex_t &b, const real_t &a)
+{
 	
 	complex_t c;    
 	c.x = a * b.x ;
@@ -123,7 +130,8 @@ __host__ __device__ inline complex_t  operator*(const complex_t &b, const real_t
 }
 
 
-__host__ __device__ inline complex_t  operator*(const complex_t &a, const complex_t &b) {
+__host__ __device__ inline complex_t  operator*(const complex_t &a, const complex_t &b)
+{
 	
 	complex_t c;    
 	c.x = a.x * b.x - a.y * b.y ;
@@ -133,7 +141,8 @@ __host__ __device__ inline complex_t  operator*(const complex_t &a, const comple
 }
 
 
-__host__ __device__ inline complex_t  operator/(const complex_t &b, const real_t &a) {
+__host__ __device__ inline complex_t  operator/(const complex_t &b, const real_t &a) 
+{
 	
 	complex_t c;    
 	c.x = b.x / a ;

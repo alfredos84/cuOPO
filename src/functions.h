@@ -90,8 +90,8 @@ __host__ __device__ inline complex_t  operator-(const complex_t &b, const real_t
 {
 	
 	complex_t c;    
-	c.x = a   - b.x;
-	c.y =     - b.y;
+	c.x =  b.x - a;
+	c.y =  b.y;
 	
 	return c;
 }

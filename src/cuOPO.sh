@@ -17,10 +17,11 @@ rm cuOPO                             # This removes a previuos executable file (
 # the regime and the number of equations used in the simulations:
 # a) For set the regime use: -DCW_OPO (for cw) or -DNS_OPO (for nanosecond). You must to define it!!. 
 # b) For set three coupled-wave equations use: -DTHREE_EQS (two eqs. is set by default).
-# c) For set the used nonlinear crystal: -DPPLN (for MgO:PPLN) or -DSPPLT.
+# c) For set the used nonlinear crystal: -DPPLN or -DSPPLT (for MgO:PPLN or MgO:sPPLT, respectively).
 
-# nvcc cuOPO.cu -DCW_OPO -DPPLN --gpu-architecture=sm_60 -lcufftw -lcufft -o cuOPO
-nvcc cuOPO.cu -DCW_OPO -DTHREE_EQS -DPPLN --gpu-architecture=sm_60 -lcufftw -lcufft -o cuOPO
+# nvcc cuOPO.cu -DCW_OPO -DPPLN --gpu-architecture=sm_60 -lcufftw -lcufft -o cuOPO # for two equations
+nvcc cuOPO.cu -DCW_OPO -DTHREE_EQS -DPPLN --gpu-architecture=sm_60 -lcufftw -lcufft -o cuOPO  # for three equations
+
 FOLDERSIM="Simulations"
 
 # There are three flags specific for CUDA compiler:
@@ -43,92 +44,30 @@ EQS="3"                              # Set number of equations to solve (2 or 3)
 # The variables defined below (ARGX) will be passed as arguments to the main file 
 # cuOPO.cu on each execution via the argv[X] instruction.
 
-LP=(532)                             # Pump wavelength                                            (ARG1)
-TCR=(37.4305)                        # Phase-matching temperature                                 (ARG2)
-GP=(6.95339)                         # Grating period                                             (ARG3)
-NN=(4)                               # N = Power/Pth                                              (ARG9)
-RE=(98)                              # Reflectivity at signal wl (in percent %)                   (ARG5)
-D=(0)                                # Net cavity detuning (in rad)                               (ARG6)
-GD=(0)                               # GDD compensation (in percent %)                            (ARG7)
-TD=(0)                               # TOD compensation (in percent %)                            (ARG8)
-UPM=(0)                              # Using phase modulator: OFF/ON = 0/1                        (ARG9)
-MD=(0)                               # EOM: β (modulation depth in π rads)                        (ARG10)
-FM=(0)                               # δf = FSR - fpm [MHz] Frequency detuning for EOM            (ARG11)
+LP=(532)            # Pump wavelength                                            (ARG1)
+T=(37.4305)         # Phase-matching temperature                                 (ARG2)
+GP=(6.95339)        # Grating period                                             (ARG3)
+N=(4)               # N = Power/Pth                                              (ARG9)
+R=(98)              # Reflectivity at signal wl (in percent %)                   (ARG5)
+D=(0)               # Net cavity detuning (in rad)                               (ARG6)
+GDD=(0)             # GDD compensation (in percent %)                            (ARG7)
+TOD=(0)             # TOD compensation (in percent %)                            (ARG8)
+UPM=(0)             # Using phase modulator: OFF/ON = 0/1                        (ARG9)
+MODDEP=(0)          # EOM: β (modulation depth in π rads)                        (ARG10)
+FREQMOD=(0)         # δf = FSR - fpm [MHz] Frequency detuning for EOM            (ARG11)
 
+									
+printf "\nMaking directory...\n"
+FOLDER="${REG}_${EQS}eqs_PPLN_beta_${MODDEP}_N_${N}_GDD_${GDD}_LP_${L}nm"
+FILE="${REG}_${EQS}eqs_PPLN_beta_${MODDEP}_N_${N}_GDD_${GDD}_LP_${L}nm.txt"
 
-# Each for-loop span over one or more values defined in the previous arguments. 
-for (( l=0; l<${#LP[@]}; l++ ))
-do  
-	for (( u=0; u<${#UPM[@]}; u++ ))
-	do  
-		for (( n=0; n<${#NN[@]}; n++ ))
-		do  
-			for (( m=0; m<${#MD[@]}; m++ ))
-			do  
-				for (( f=0; f<${#FM[@]}; f++ ))
-				do
-					for (( i=0; i<${#D[@]}; i++ ))
-					do  
-						for (( r=0; r<${#RE[@]}; r++ ))
-						do	
-							for (( g=0; g<${#GD[@]}; g++ ))
-							do
-								for (( t=0; t<${#TD[@]}; t++ ))
-								do
-									L=${LP[$l]}
-									printf "\nPump wavelength  = ${L} nm\n" 
-									
-									TEMP=${TCR[$l]}
-									printf "\nPhase-matching T = ${TEMP} ºC\n"
-									
-									GRPER=${GP[$l]}
-									printf "\nGrating period   = ${GRPER} um\n"
-									
-									N=${NN[$n]} 
-									printf "\nPower/Pth        = ${N} \n" 
-									
-									R=${RE[$r]} 
-									printf "\nR                = ${R} %% \n"
-									
-									DELTAS=${D[$i]}
-									printf "\ndelta            = ${DELTAS}\n"
-									
-									GDD=${GD[$g]} 
-									printf "\nGDD compensation = ${GDD}%%\n"
-									
-									TOD=${TD[$t]}
-									printf "\nTOD compensation = ${TOD}%%\n"
-									
-									U=${UPM[$u]} 
-									printf "\nPhase mod ON/OFF = ${UPM}\n"
-									
-									MODDEP=${MD[$m]}
-									printf "\nModulation depth = ${MODDEP}\n"
-									
-									FREQMOD=${FM[$f]}
-									printf "\nFrequency mod    = ${FREQMOD} \n"
-									
-									printf "\nMaking directory...\n"
-									FOLDER="${REG}_${EQS}eqs_PPLN_beta_${MODDEP}_N_${N}_GDD_${GDD}_LP_${L}nm"
-									FILE="${REG}_${EQS}eqs_PPLN_beta_${MODDEP}_N_${N}_GDD_${GDD}_LP_${L}nm.txt"
-									
-									printf "Bash execution and writing output file...\n\n"
-									./cuOPO $L $TEMP $GRPER $N $R $DELTAS $GDD $TOD $U $MODDEP $FREQMOD | tee -a $FILE
-									
-									printf "Bash finished!!\n\n" 
-									mkdir $FOLDER
-									mv *.dat $FOLDER"/"
-									mv *.txt $FOLDER"/"
-								done
-							done
-						done
-					done
-				done
-			done
-		done
-	done
-done
+printf "Bash execution and writing output file...\n\n"
+./cuOPO $LP $T $GP $N $R $D $GDD $TOD $UPM $MODDEP $FREQMOD | tee -a $FILE
 
+printf "Bash finished!!\n\n" 
+mkdir $FOLDER
+mv *.dat $FOLDER"/"
+mv *.txt $FOLDER"/"
 
 if [ -d "$FOLDERSIM" ]; then
 	echo "Moving simulations in ${FOLDERSIM}..."
@@ -139,4 +78,3 @@ else
 	echo "Creating and moving simulations in ${FOLDERSIM}..."
 	mv cw_* $FOLDERSIM"/" 
 fi
-

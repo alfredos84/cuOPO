@@ -37,9 +37,9 @@ When finished a new folder named `cw_2eqs_PPLN_beta_0_N_4_GDD_0_LP_532nm` will h
 
 In the `cuOPO.sh` file you will find the command line for the compilation:
 ```
-nvcc cuOPO.cu -D<REGIME> --gpu-architecture=sm_75 -lcufftw -lcufft -o cuOPO
+nvcc cuOPO.cu -D<REGIME> -D<CRYSTAL> -DTHREE_EQS --gpu-architecture=sm_75 -lcufftw -lcufft -o cuOPO
 ```
-where the preprocessor variable `<REGIME>` could be either `CW_OPO` or `NS_OPO`. This compiles the package using two coupled-wave equations. If the user wants to use three coupled-wave equations, add the additional preprocessor variable `-DTHREE_EQS` in the compilation line. The flag `--gpu-architecture=sm_75` is related to the GPU architecture (see below more information about this point). The flags `-lcufftw` and `-lcufft` tell the compiler to use the `CUFFT library` that performs the Fourier transform on GPU .
+where the preprocessor variable `<REGIME>` could be either `CW_OPO` or `NS_OPO`. `<CRYSTAL>` set the nonlinear crystal used in simulations. Currently, there are available two crystals, namely, MgO:PPLN and Mgo:sPPLT. This compiles the package using two coupled-wave equations. If the user wants to use three coupled-wave equations, add the additional preprocessor variable `-DTHREE_EQS` in the compilation line. The flag `--gpu-architecture=sm_75` is related to the GPU architecture (see below more information about this point). The flags `-lcufftw` and `-lcufft` tell the compiler to use the `CUFFT library` that performs the Fourier transform on GPU .
 
 Finally, the execution is done using the command line in the `cuOPO.sh` file is
 ```

@@ -19,7 +19,7 @@ git clone https://github.com/alfredos84/cuOPO.git
 ```
 Once the project was cloned, the user will find a parent folder `cuOPO` containing two other
 - `src`: contains the main file `cuOPO.cu`, the headers folder, and the bash file `cuOPO.sh` used to compile and execute the package by passing several simulations parameters.
-- `headers`: this folder contains the headers files needed to execute the package.
+- `src/headers`: this folder contains the headers files needed to execute the package.
 
 ### Bash file `src/cuOPO.sh`
 

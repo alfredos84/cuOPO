@@ -469,17 +469,25 @@ int main(int argc, char *argv[]){
 		
 		
 		if(GDD!=0){ // adds dispersion compensation
+			cufftExecC2C(plan1D, (complex_t *)As, (complex_t *)Asw_gpu, CUFFT_INVERSE);
+			CHECK(cudaDeviceSynchronize());
+			CUFFTscale<<<grid,block>>>(Asw_gpu, SIZE);
+			CHECK(cudaDeviceSynchronize());
 			AddGDD<<<grid,block>>>(Asw_gpu, auxs_gpu, w_gpu, GDD);
 			CHECK(cudaDeviceSynchronize());
 			cufftExecC2C(plan1D, (complex_t *)Asw_gpu, (complex_t *)As_gpu, CUFFT_FORWARD);
 			CHECK(cudaDeviceSynchronize());
 			#ifdef THREE_EQS
+			cufftExecC2C(plan1D, (complex_t *)Ai, (complex_t *)Aiw_gpu, CUFFT_INVERSE);
+			CHECK(cudaDeviceSynchronize());
+			CUFFTscale<<<grid,block>>>(Aiw_gpu, SIZE);
+			CHECK(cudaDeviceSynchronize());
 			AddGDD<<<grid,block>>>(Aiw_gpu, auxi_gpu, w_gpu, GDD);
 			CHECK(cudaDeviceSynchronize());
 			cufftExecC2C(plan1D, (complex_t *)Aiw_gpu, (complex_t *)Ai_gpu, CUFFT_FORWARD);
 			CHECK(cudaDeviceSynchronize());
 			#endif
-		}		
+		}			
 		
 		if( using_phase_modulator ){ // use an intracavy phase modulator of one o more fields
 			PhaseModulatorIntraCavity<<<grid,block>>>(As_gpu, auxs_gpu, mod_depth, fpm, T_gpu);

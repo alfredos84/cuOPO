@@ -350,14 +350,9 @@ int main(int argc, char *argv[]){
 			std::cout << "Using a phase modulator:" << std::endl;
 			std::cout << "Mod. depth (\u03B2)          = " << atof(argv[10]) << "\u03C0 rad = " << mod_depth << " rad" << std::endl;
 			std::cout << "Freq. detuning (\u03B4f)     = " << df*1e6 << " MHz" << std::endl;
-			std::cout << "Mod. frequency(fm)      = " << fpm*1e3 << " GHz" << std::endl;
-			std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
-			std::cout << "(N,\u03B2,\u03B4f,\u03B5) = ( " << Nth << ", " << atof(argv[10]) << ", "  << std::setprecision(4) << df*1e6 << ", " << epsilon << " )\n\n" << std::endl;			
+			std::cout << "Mod. frequency(fm)      = " << fpm*1e3 << " GHz" << std::endl;			
 		}
-		else{std::cout << "No phase modulator" << std::endl;
-			std::cout << "\n\nPoint in the space of parameters:\n" << std::endl;
-			std::cout << "( N, \u03B2, \u03B4f, \u03B5 ) = ( " << Nth << ", 0, 0, " << std::setprecision(2) << epsilon << " )\n\n" << std::endl;
-		}
+		else{std::cout << "No phase modulator" << std::endl;}
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
 	

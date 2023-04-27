@@ -26,7 +26,7 @@ const real_t C    = 299792458*1E6/1E12;		// speed of ligth in vacuum [um/ps]
 const real_t EPS0 = 8.8541878128E-12*1E12/1E6;	// vacuum pertivity [W.ps/V²μm] 
 
 const uint SIZE   = 1 << 14;				// vector size
-const uint NZ     = 150;				// steps over z direction
+const uint NZ     = 150;
 const uint NRT    = 10000;				// number of round trips            
 const uint BLKX   = 16;					// block dimensions for kernels
 
@@ -91,7 +91,9 @@ int main(int argc, char *argv[]){
 	// Grids, crystal and cavity parameters //
 	real_t lp        = atof(argv[1])*1e-3;  // pump wavelength   [μm]
 	real_t ls        = 2*lp;                // signal wavelength [μm]
+	#ifdef THREE_EQS
 	real_t li        = lp*ls/(ls-lp);       // idler wavelength  [μm]
+	#endif
 	
 	real_t Temp      = atof(argv[2]);       // crystal temperature [ºC]
 	real_t Lambda    = atof(argv[3]);       // grating period for QPM [μm]  
@@ -108,14 +110,20 @@ int main(int argc, char *argv[]){
 	real_t b2s       = gvd(ls, Temp);       // signal GVD [ps²/μm] 
 	real_t b3s       = 0.*TOD(ls, Temp);    // signal TOD [ps³/μm]		
 	real_t ks        = 2*PI*deff/(ns*ls);   // signal kappa [1/V]
-	
+	#ifdef THREE_EQS
 	real_t ni        = n(li, Temp);         // idler ref. index
 	real_t vi        = group_vel(li, Temp); // idler group velocity [μm/ps]
 	real_t b2i       = gvd(li, Temp);       // idler GVD [ps²/μm]
 	real_t b3i       = 0.*TOD(li, Temp);    // idler TOD [ps³/μm]	
 	real_t ki        = 2*PI*deff/(ni*li);   // idler kappa [1/V]
+	#endif
 	
+	#ifdef THREE_EQS
 	real_t dk        = 2*PI*( np/lp-ns/ls-ni/li-1/Lambda ); // mismatch factor
+	#else
+	real_t dk        = 2*PI*( np/lp-2*ns/ls-1/Lambda ); // mismatch factor
+	#endif
+	
 	real_t dkp       = 1/vp-1/vs;                           // group velocity mismatch	
 	real_t Lcav      = 5 * Lcr;                             // cavity length [um]
 	real_t Rs        = atof(argv[5])*0.01;                  // Reflectivity at signal wavelength 
@@ -132,8 +140,9 @@ int main(int argc, char *argv[]){
 	real_t epsilon   = atof(argv[7])*0.01;                  // dispersion compensation index
 	real_t GDD       = -epsilon*b2s*Lcr;                    // GDD [ps²]
 	real_t TODscomp  = -0.01*atof(argv[8])*b3s*Lcr;         // TOD compensation [ps³]
+	#ifdef THREE_EQS
 	real_t TODicomp  = -0.01*atof(argv[8])*b3i*Lcr;         // TOD compensation [ps³]
-	
+	#endif
 	
 	// z discretization, time and frequency discretization
 	real_t dz        = Lcr/NZ;    // number of z-steps in the crystal
@@ -144,7 +153,7 @@ int main(int argc, char *argv[]){
 	bool stride       = false;
 	uint Nrts;        // number of last round trips to save (only for cw)
 	if(stride){Nrts = 100;}
-	else{Nrts = 16;}
+	else{Nrts = 1;}
 	
 	
 	#ifdef CW_OPO
@@ -218,6 +227,7 @@ int main(int argc, char *argv[]){
 	real_t Power = Inten*spot;                // Pump power in [W]
 	real_t Ap0   = sqrt(2*Inten/(np*EPS0*C)); // Input pump field strength [V/μm]
 	
+	
 	// Define input pump vector
 	#ifdef CW_OPO
 	complex_t *Ap_in = (complex_t*)malloc(nBytes); // input pump vector
@@ -255,17 +265,17 @@ int main(int argc, char *argv[]){
 	
 	// Define string variables for saving files
 	std::string Filename, SAux, Extension = ".dat";
-	bool save_input_fields = false;  // Save input fields files
+	bool save_input_fields = true;  // Save input fields files
 	if (save_input_fields){
 		#ifdef CW_OPO
-		Filename = "pump_input";	SaveVectorComplexGPU (Ap_in, SIZE, Filename);
+		Filename = "pump_input";	SaveVectorComplex (Ap_in, SIZE, Filename);
 		#endif
 		#ifdef NS_OPO
-		Filename = "pump_input";	SaveVectorComplexGPU (Ap_in, SIZEL, Filename);
+		Filename = "pump_input";	SaveVectorComplex (Ap_in, SIZEL, Filename);
 		#endif
-		Filename = "signal_input";	SaveVectorComplexGPU (As, SIZE, Filename);
+		Filename = "signal_input";	SaveVectorComplex (As, SIZE, Filename);
 		#ifdef THREE_EQS	
-		Filename = "idler_input";	SaveVectorComplexGPU (Ai, SIZE, Filename);	
+		Filename = "idler_input";	SaveVectorComplex (Ai, SIZE, Filename);	
 		#endif
 	}
 	
@@ -282,7 +292,9 @@ int main(int argc, char *argv[]){
 		std::cout << "Temp                    = " << Temp << " ºC" << std::endl;
 		std::cout << "np                      = " << np << std::endl;
 		std::cout << "ns                      = " << ns << std::endl;
+		#ifdef THREE_EQS
 		std::cout << "ni                      = " << ni << std::endl;
+		#endif
 		std::cout << "\u03BD⁻¹ pump                = " << 1.0/vp << " ps/\u03BCm" << std::endl;
 		std::cout << "\u03BD⁻¹ signal              = " << 1.0/vs << " ps/\u03BCm" << std::endl;
 		#ifdef THREE_EQS
@@ -434,7 +446,9 @@ int main(int argc, char *argv[]){
 	cufftPlan1d(&plan1D, SIZE, CUFFT_C2C, 1);
 	
 	std::cout << "Starting main loop on CPU & GPU...\n" << std::endl;
+	#ifdef CW_OPO
 	uint mm = 0; // counts for cw saved round trips
+	#endif
 	for (uint nn = 0; nn < NRT; nn++){
 		if( nn%250 == 0 or nn == NRT-1 )
 			std::cout << "#round trip: " << nn << std::endl;
@@ -445,7 +459,7 @@ int main(int argc, char *argv[]){
 		#endif
 		#ifdef NS_OPO
 		// read the input pump in nn-th round trip
-		ReadPump<<<grid,block>>>( Ap_gpu, Ap_in_gpu, NRT, nn );
+		ReadPump<<<grid,block>>>( Ap_gpu, Ap_in_gpu, NRT, nn);
 		CHECK(cudaDeviceSynchronize()); 
 		#endif
 		
@@ -469,7 +483,7 @@ int main(int argc, char *argv[]){
 		
 		
 		if(GDD!=0){ // adds dispersion compensation
-			cufftExecC2C(plan1D, (complex_t *)As, (complex_t *)Asw_gpu, CUFFT_INVERSE);
+			cufftExecC2C(plan1D, (complex_t *)As_gpu, (complex_t *)Asw_gpu, CUFFT_INVERSE);
 			CHECK(cudaDeviceSynchronize());
 			CUFFTscale<<<grid,block>>>(Asw_gpu, SIZE);
 			CHECK(cudaDeviceSynchronize());
@@ -478,7 +492,7 @@ int main(int argc, char *argv[]){
 			cufftExecC2C(plan1D, (complex_t *)Asw_gpu, (complex_t *)As_gpu, CUFFT_FORWARD);
 			CHECK(cudaDeviceSynchronize());
 			#ifdef THREE_EQS
-			cufftExecC2C(plan1D, (complex_t *)Ai, (complex_t *)Aiw_gpu, CUFFT_INVERSE);
+			cufftExecC2C(plan1D, (complex_t *)Ai_gpu, (complex_t *)Aiw_gpu, CUFFT_INVERSE);
 			CHECK(cudaDeviceSynchronize());
 			CUFFTscale<<<grid,block>>>(Aiw_gpu, SIZE);
 			CHECK(cudaDeviceSynchronize());
@@ -487,7 +501,7 @@ int main(int argc, char *argv[]){
 			cufftExecC2C(plan1D, (complex_t *)Aiw_gpu, (complex_t *)Ai_gpu, CUFFT_FORWARD);
 			CHECK(cudaDeviceSynchronize());
 			#endif
-		}			
+		}		
 		
 		if( using_phase_modulator ){ // use an intracavy phase modulator of one o more fields
 			PhaseModulatorIntraCavity<<<grid,block>>>(As_gpu, auxs_gpu, mod_depth, fpm, T_gpu);

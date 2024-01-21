@@ -445,8 +445,9 @@ int main(int argc, char *argv[]){
 	uint mm = 0; // counts for cw saved round trips
 	#endif
 	for (uint nn = 0; nn < NRT; nn++){
-		if( nn%250 == 0 or nn == NRT-1 )
-			std::cout << "#round trip: " << nn << std::endl;
+		if( nn%500 == 0 or nn == NRT-1 )
+			std::cout << "#round trip: " << nn << " - Completed " << nn*100/NRT << "%" << "\t\r" << std::flush;
+
 		
 		#ifdef CW_OPO
 		// update the input pump in each round trip

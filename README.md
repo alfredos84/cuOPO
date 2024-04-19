@@ -7,6 +7,9 @@ The provided software implements a solver for the CWEs including dispersion term
 This code is useful for simulations based on three-wave mixing proccesses such as optical parametric oscillators (OPOs).
 It solves the coupled-wave equations (CWEs) for signal, idler and pump using a parallel computing scheme based on Split-Step Fourier Method (SSFM).
 
+If this code is used for further publications, please cite the following article (https://doi.org/10.1016/j.cpc.2023.108910):
+Sanchez, A. D., S. Chaitanya Kumar, and M. Ebrahim-Zadeh. "CUDA-based optical parametric oscillator simulator." Computer Physics Communications 294 (2024): 108910.
+
 For running this code is necessary to have a GPU in your computer and installed the CUDA drivers and the CUDA-TOOLKIT as well. 
 To install the CUDA driver on a Linux system please visit: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
 
